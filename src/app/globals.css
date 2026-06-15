@@ -1,26 +1,56 @@
 @import "tailwindcss";
 
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+@theme {
+  /* Color system */
+  --color-bg: #080808;
+  --color-surface: #111114;
+  --color-surface-raised: #1C1C20;
+  --color-surface-hover: #222228;
+  --color-border-subtle: #2A2A30;
+  --color-border-strong: #3A3A42;
+  
+  --color-accent: #D4AF8A;
+  --color-accent-hover: #E8C9A0;
+  --color-accent-muted: #7A6045;
+  --color-accent-glow: rgba(212, 175, 138, 0.15);
+
+  --color-text-primary: #F0EDE8;
+  --color-text-secondary: #9A9A9A;
+  --color-text-muted: #5A5A60;
+  --color-text-accent: #D4AF8A;
+
+  --color-success: #4A9B7A;
+  --color-warning: #C09A4A;
+  --color-danger: #C05A4A;
+  --color-info: #4A7AC0;
+
+  /* Typography */
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.6);
+  --shadow-accent: 0 0 20px rgba(212, 175, 138, 0.2);
+  --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.8);
+
+  /* Shape scale adjustments */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #080808;
+  --foreground: #F0EDE8;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
+
