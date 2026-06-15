@@ -20,3 +20,12 @@ export async function fetchExercises(params: GetExercisesParams = {}): Promise<E
   });
   return response.data;
 }
+
+export async function createExercise(name: string, targetMuscle: string): Promise<Exercise> {
+  const response = await axios.post<Exercise>("/api/workouts/exercises", {
+    name,
+    target_muscle: targetMuscle,
+  });
+  return response.data;
+}
+

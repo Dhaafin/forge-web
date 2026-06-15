@@ -39,3 +39,39 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: message }, { status });
   }
 }
+
+export async function POST(req: NextRequest) {
+  try {
+    const { name, target_muscle } = await req.json();
+
+    if (!name || !target_muscle) {
+      return NextResponse.json(
+        { error: "Name and target muscle are required" },
+        { status: 400 }
+      );
+    }
+
+    const accessToken = req.cookies.get("access_token")?.value;
+    const backendUrl = process.env.BACKEND_API_URL || "http://127.0.0.1:8000";
+    const exercisesEndpoint = `${backendUrl}/api/v1/workouts/exercises`;
+
+    const headers: Record<string, string> = {};
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+
+    const response = await axios.post(
+      exercisesEndpoint,
+      { name, target_muscle },
+      { headers }
+    );
+
+    return NextResponse.json(response.data, { status: 201 });
+  } catch (err: any) {
+    console.error("Create Exercise Proxy Error:", err.message);
+    const status = err.response?.status || 500;
+    const message = err.response?.data?.detail || "Failed to create exercise";
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+
