@@ -47,6 +47,11 @@ forge-web/
 ## Architecture & Conventions
 - **Next.js conventions**: App router, components nested inside or alongside pages where appropriate.
 - **Styling**: Tailwind CSS v4.
+- **Component Architecture (Atomic Design)**: Always structure UI components using Atomic Design principles inside `src/components/`:
+  - **Atoms**: Basic building blocks (e.g., `Button`, `Input`, `Badge`, `Spinner`).
+  - **Molecules**: Groups of atoms bonded together (e.g., `FormField`, `CheckboxGroup`, `StatItem`).
+  - **Organisms**: Complex components composed of molecules and/or atoms (e.g., `LoginForm`, `MemberCardHero`, `SidebarNav`).
+  - **Templates/Pages**: Page layouts and routed screens (e.g., `/login`, `/dashboard`).
 
 ## Agent Best Practices
 
