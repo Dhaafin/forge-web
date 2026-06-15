@@ -50,23 +50,46 @@ export default function RecordWorkoutPage() {
   // Load exercises list for dropdown selection
   useEffect(() => {
     const loadExercises = async () => {
+      let localCustoms: Exercise[] = [];
+      try {
+        const stored = localStorage.getItem("forge_custom_exercises");
+        if (stored) {
+          localCustoms = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.warn("Could not load custom exercises from localStorage", e);
+      }
+
       try {
         const data = await fetchExercises();
-        setExerciseOptions(data);
-        if (data.length > 0) {
-          setSelectedExerciseId(data[0].id);
+        const merged = [...data];
+        localCustoms.forEach((item) => {
+          if (!merged.some((m) => m.id === item.id)) {
+            merged.push(item);
+          }
+        });
+        setExerciseOptions(merged);
+        if (merged.length > 0) {
+          setSelectedExerciseId(merged[0].id);
         }
       } catch (err: any) {
         console.warn("Could not load exercises from API, using fallback", err.message);
-        // Fallback list
         const fallbacks = [
           { id: "3fa85f64-1", name: "Barbell Back Squat", target_muscle: "Quads" },
           { id: "3fa85f64-2", name: "Conventional Deadlift", target_muscle: "Hamstrings" },
           { id: "3fa85f64-3", name: "Incline Bench Press", target_muscle: "Chest" },
           { id: "3fa85f64-4", name: "Standing Overhead Press", target_muscle: "Shoulders" },
         ];
-        setExerciseOptions(fallbacks);
-        setSelectedExerciseId(fallbacks[0].id);
+        const mergedFallbacks = [...localCustoms];
+        fallbacks.forEach((item) => {
+          if (!mergedFallbacks.some((m) => m.id === item.id)) {
+            mergedFallbacks.push(item);
+          }
+        });
+        setExerciseOptions(mergedFallbacks);
+        if (mergedFallbacks.length > 0) {
+          setSelectedExerciseId(mergedFallbacks[0].id);
+        }
       }
     };
     loadExercises();

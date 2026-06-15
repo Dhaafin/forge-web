@@ -57,6 +57,41 @@ export default function ExercisesPage() {
   const [newExerciseMuscle, setNewExerciseMuscle] = useState("Chest"); // Default value mapping to the first constant option
   const [submitting, setSubmitting] = useState(false);
 
+  // Load custom exercises from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("forge_custom_exercises");
+      if (stored) {
+        const parsed: Exercise[] = JSON.parse(stored);
+        if (parsed.length > 0) {
+          setLocalFallbackList((prev) => {
+            const merged = [...parsed];
+            prev.forEach((p) => {
+              if (!merged.some((m) => m.id === p.id)) {
+                merged.push(p);
+              }
+            });
+            return merged;
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load custom exercises from localStorage:", e);
+    }
+  }, []);
+
+  // Save custom exercises to localStorage whenever localFallbackList changes
+  useEffect(() => {
+    try {
+      const customOnes = localFallbackList.filter(
+        (ex) => !defaultFallbackExercises.some((def) => def.id === ex.id)
+      );
+      localStorage.setItem("forge_custom_exercises", JSON.stringify(customOnes));
+    } catch (e) {
+      console.warn("Failed to sync custom exercises to localStorage:", e);
+    }
+  }, [localFallbackList]);
+
   // Form states for editing exercise
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
