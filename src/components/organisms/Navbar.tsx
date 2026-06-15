@@ -9,7 +9,8 @@ export const Navbar: React.FC = () => {
 
   const links = [
     { href: "/dashboard", label: "DASHBOARD" },
-    { href: "/dashboard/exercises", label: "WORKOUTS" },
+    { href: "/dashboard/exercises", label: "EXERCISES" },
+    { href: "/dashboard/workouts", label: "WORKOUTS" },
   ];
 
   return (

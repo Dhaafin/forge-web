@@ -41,5 +41,43 @@ export async function deleteExercise(id: string): Promise<void> {
   await axios.delete(`/api/workouts/exercises/${id}`);
 }
 
+export interface WorkoutSet {
+  id: string;
+  exercise_id: string;
+  weight_kg: number;
+  reps: number;
+  is_pr: boolean;
+  exercise?: Exercise;
+}
+
+export interface WorkoutSession {
+  id: string;
+  user_id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  sets: WorkoutSet[];
+}
+
+export interface GetWorkoutHistoryParams {
+  search?: string;
+  start_date?: string;
+  end_date?: string;
+  time_window?: string;
+  sort_by?: "start_time" | "duration_minutes" | "title";
+  order?: "asc" | "desc";
+  limit?: number;
+  offset?: number;
+}
+
+export async function fetchWorkoutHistory(params: GetWorkoutHistoryParams = {}): Promise<WorkoutSession[]> {
+  const response = await axios.get<WorkoutSession[]>("/api/workouts/history", {
+    params,
+  });
+  return response.data;
+}
+
+
 
 
