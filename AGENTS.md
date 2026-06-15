@@ -52,6 +52,11 @@ forge-web/
   - **Molecules**: Groups of atoms bonded together (e.g., `FormField`, `CheckboxGroup`, `StatItem`).
   - **Organisms**: Complex components composed of molecules and/or atoms (e.g., `LoginForm`, `MemberCardHero`, `SidebarNav`).
   - **Templates/Pages**: Page layouts and routed screens (e.g., `/login`, `/dashboard`).
+- **API Calls & Proxying**:
+  - Do not call external APIs directly from Client Components (to prevent CORS issues and expose secrets). Use Next.js **Route Handlers** (`src/app/api/`) as a proxy layer.
+  - Use **Axios** for making HTTP requests in both client-side services and server-side Route Handlers.
+  - Store external endpoint URLs in environment variables (e.g. `process.env.BACKEND_API_URL` or `NEXT_PUBLIC_API_URL`).
+  - Service functions should be organized in `src/services/` (e.g. `src/services/auth.ts`).
 
 ## Agent Best Practices
 

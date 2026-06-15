@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "../atoms/Input";
 import { Button } from "../atoms/Button";
+import { loginUser } from "../../services/auth";
 
 export const LoginForm: React.FC = () => {
   const router = useRouter();
@@ -12,24 +13,31 @@ export const LoginForm: React.FC = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Mock validation
     if (!email || !password) {
       setError("Please fill in all VIP credentials.");
       setLoading(false);
       return;
     }
 
-    setTimeout(() => {
-      setLoading(false);
-      // Success: Route to dashboard
+    try {
+      await loginUser(email, password);
+      // Route to dashboard on success
       router.push("/dashboard");
-    }, 1200);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.error || 
+        "Authentication failed. Please verify your credentials."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-sm flex flex-col gap-6">
