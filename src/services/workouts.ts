@@ -29,3 +29,12 @@ export async function createExercise(name: string, targetMuscle: string): Promis
   return response.data;
 }
 
+export async function updateExercise(id: string, name: string, targetMuscle: string): Promise<Exercise> {
+  const response = await axios.put<Exercise>(`/api/workouts/exercises/${id}`, {
+    name,
+    target_muscle: targetMuscle,
+  });
+  return response.data;
+}
+
+

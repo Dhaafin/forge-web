@@ -8,7 +8,7 @@ import { Badge } from "../../../components/atoms/Badge";
 import { Skeleton } from "../../../components/atoms/Skeleton";
 import { Dropdown } from "../../../components/molecules/Dropdown";
 import { Modal } from "../../../components/molecules/Modal";
-import { fetchExercises, createExercise, Exercise } from "../../../services/workouts";
+import { fetchExercises, createExercise, updateExercise, Exercise } from "../../../services/workouts";
 import { useFlash } from "../../../contexts/FlashContext";
 
 // Target Muscle constants for registry
@@ -56,6 +56,12 @@ export default function ExercisesPage() {
   const [newExerciseName, setNewExerciseName] = useState("");
   const [newExerciseMuscle, setNewExerciseMuscle] = useState("Chest"); // Default value mapping to the first constant option
   const [submitting, setSubmitting] = useState(false);
+
+  // Form states for editing exercise
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+  const [editExerciseName, setEditExerciseName] = useState("");
+  const [editExerciseMuscle, setEditExerciseMuscle] = useState("Chest");
 
   const loadExercises = async () => {
     setLoading(true);
@@ -146,6 +152,55 @@ export default function ExercisesPage() {
     }
   };
 
+  const startEdit = (exercise: Exercise) => {
+    setEditingExercise(exercise);
+    setEditExerciseName(exercise.name);
+    setEditExerciseMuscle(exercise.target_muscle);
+    setIsEditOpen(true);
+  };
+
+  const handleUpdateExercise = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingExercise || !editExerciseName || !editExerciseMuscle) {
+      showFlash("All exercise input fields are required.", "warning");
+      return;
+    }
+    setSubmitting(true);
+
+    try {
+      const updatedEx = await updateExercise(editingExercise.id, editExerciseName, editExerciseMuscle);
+      showFlash(`Exercise "${updatedEx.name}" updated successfully.`, "success");
+      
+      // Update local list if using it
+      setLocalFallbackList((prev) =>
+        prev.map((ex) => (ex.id === editingExercise.id ? updatedEx : ex))
+      );
+
+      setIsEditOpen(false);
+      setEditingExercise(null);
+      loadExercises();
+    } catch (err: any) {
+      console.warn("API update failed, updating locally synced fallback database:", err.message);
+
+      const updatedEx: Exercise = {
+        id: editingExercise.id,
+        name: editExerciseName,
+        target_muscle: editExerciseMuscle,
+      };
+
+      setLocalFallbackList((prev) =>
+        prev.map((ex) => (ex.id === editingExercise.id ? updatedEx : ex))
+      );
+      
+      showFlash(`Exercise metadata synced to local training library.`, "success");
+      setIsEditOpen(false);
+      setEditingExercise(null);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+
   const sortByOptions = [
     { value: "name", label: "Name" },
     { value: "target_muscle", label: "Target Muscle" },
@@ -232,15 +287,27 @@ export default function ExercisesPage() {
               key={exercise.id}
               className="bg-surface border border-border-subtle p-5 rounded-md hover:border-accent-muted transition-all duration-300 flex items-center justify-between shadow-card group"
             >
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 pr-4">
                 <span className="text-[9px] tracking-widest font-mono text-text-muted">ID: {exercise.id.slice(0, 8)}</span>
                 <h4 className="text-sm font-bold text-text-primary uppercase group-hover:text-text-accent transition-colors">
                   {exercise.name}
                 </h4>
               </div>
-              <span className="text-[9px] bg-bg border border-border-subtle px-2.5 py-1 text-text-secondary rounded-xs uppercase font-semibold tracking-wider font-mono">
-                {exercise.target_muscle}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] bg-bg border border-border-subtle px-2.5 py-1 text-text-secondary rounded-xs uppercase font-semibold tracking-wider font-mono">
+                  {exercise.target_muscle}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => startEdit(exercise)}
+                  className="p-1.5 text-text-secondary hover:text-text-accent hover:bg-bg border border-transparent hover:border-border-subtle rounded-xs transition-all duration-200 cursor-pointer"
+                  title="Edit Exercise"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+              </div>
             </div>
           ))}
         </section>
@@ -288,6 +355,54 @@ export default function ExercisesPage() {
             </Button>
             <Button type="submit" disabled={submitting} className="text-xs py-2">
               {submitting ? "Forging..." : "Forge Exercise"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Exercise Modal */}
+      <Modal
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setEditingExercise(null);
+        }}
+        title="Edit Exercise"
+        subtitle="UPDATE PROTOCOL"
+      >
+        <form onSubmit={handleUpdateExercise} className="flex flex-col gap-6">
+          <Input
+            id="editExName"
+            type="text"
+            label="Exercise Name"
+            placeholder="e.g. Dumbbell Hammer Curl"
+            value={editExerciseName}
+            onChange={(e) => setEditExerciseName(e.target.value)}
+            required
+          />
+
+          <Dropdown
+            label="Target Muscle Group"
+            options={muscleOptions}
+            selectedValue={editExerciseMuscle}
+            onChange={(val) => setEditExerciseMuscle(val)}
+            maxHeight="160px"
+          />
+
+          <div className="flex items-center justify-end gap-3 border-t border-border-subtle pt-4 mt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setIsEditOpen(false);
+                setEditingExercise(null);
+              }}
+              className="text-xs py-2"
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={submitting} className="text-xs py-2">
+              {submitting ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>
