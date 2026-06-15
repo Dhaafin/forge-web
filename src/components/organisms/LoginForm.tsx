@@ -5,38 +5,41 @@ import { useRouter } from "next/navigation";
 import { Input } from "../atoms/Input";
 import { Button } from "../atoms/Button";
 import { loginUser } from "../../services/auth";
+import { useFlash } from "../../contexts/FlashContext";
 
 export const LoginForm: React.FC = () => {
   const router = useRouter();
+  const { showFlash } = useFlash();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     if (!email || !password) {
-      setError("Please fill in all VIP credentials.");
+      showFlash("Please fill in all VIP credentials.", "warning");
       setLoading(false);
       return;
     }
 
     try {
       await loginUser(email, password);
+      showFlash("VIP Access Decrypted. Welcome back.", "success");
       // Route to dashboard on success
       router.push("/dashboard");
     } catch (err: any) {
-      setError(
+      showFlash(
         err.response?.data?.error || 
-        "Authentication failed. Please verify your credentials."
+        "Authentication failed. Please verify your credentials.",
+        "error"
       );
     } finally {
       setLoading(false);
     }
   };
+
 
 
   return (
@@ -50,11 +53,6 @@ export const LoginForm: React.FC = () => {
         </p>
       </div>
 
-      {error && (
-        <div className="p-3 bg-danger/10 border border-danger/20 text-danger text-xs rounded-sm">
-          {error}
-        </div>
-      )}
 
       <Input
         id="email"

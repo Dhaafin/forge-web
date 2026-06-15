@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, Inter, DM_Mono } from "next/font/google";
+import { FlashProvider } from "../contexts/FlashContext";
 import "./globals.css";
 
 const bebasNeue = Bebas_Neue({
@@ -34,9 +35,14 @@ export default function RootLayout({
       lang="en"
       className={`${bebasNeue.variable} ${inter.variable} ${dmMono.variable} h-full antialiased bg-bg text-text-primary`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <FlashProvider>
+          {children}
+        </FlashProvider>
+      </body>
     </html>
   );
 }
+
 
 
