@@ -63,6 +63,8 @@ forge-web/
   - *Props*: `label` (optional string), `options` (`{ value: string; label: string }[]`), `selectedValue` (string), `onChange` (`(value: string) => void`).
 - **FlashMessage (`src/components/molecules/FlashMessage.tsx`)**: Reusable dismissible floating alert banner with slick sliding Framer Motion animations and auto-dismiss timing.
   - *Props*: `message` (string), `type` (`success` | `error` | `warning` | `info`), `isVisible` (boolean), `onClose` (`() => void`), `duration` (optional number in ms).
+- **Modal (`src/components/molecules/Modal.tsx`)**: Sleek pop-up dialog modal panel animated with Framer Motion entry/exit transitions.
+  - *Props*: `isOpen` (boolean), `onClose` (`() => void`), `title` (optional string), `subtitle` (optional string), `children` (`ReactNode`).
 
 ## Agent Best Practices
 
