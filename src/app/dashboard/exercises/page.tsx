@@ -279,6 +279,7 @@ export default function ExercisesPage() {
             options={muscleOptions}
             selectedValue={newExerciseMuscle}
             onChange={(val) => setNewExerciseMuscle(val)}
+            maxHeight="160px"
           />
 
           <div className="flex items-center justify-end gap-3 border-t border-border-subtle pt-4 mt-2">

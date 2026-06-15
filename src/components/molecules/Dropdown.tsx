@@ -14,6 +14,7 @@ interface DropdownProps {
   selectedValue: string;
   onChange: (value: string) => void;
   className?: string;
+  maxHeight?: string;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -22,6 +23,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   selectedValue,
   onChange,
   className = "",
+  maxHeight = "250px",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -71,7 +73,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
             animate={{ opacity: 1, y: 4, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute left-0 right-0 top-full z-50 bg-surface-raised border border-border-strong rounded-sm shadow-elevated overflow-hidden py-1"
+            style={{ maxHeight }}
+            className="absolute left-0 right-0 top-full z-50 bg-surface-raised border border-border-strong rounded-sm shadow-elevated overflow-y-auto py-1"
           >
             {options.map((option) => {
               const isSelected = option.value === selectedValue;
