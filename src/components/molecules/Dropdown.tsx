@@ -28,7 +28,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentOption = options.find((opt) => opt.value === selectedValue) || options[0];
+  const currentOption = options.find((opt) => opt.value === selectedValue) || options[0] || { value: "", label: "Select..." };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
