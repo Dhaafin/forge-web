@@ -94,127 +94,95 @@ export default function ExercisesPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-bg text-text-primary">
-      {/* Navigation Header */}
-      <header className="border-b border-border-subtle bg-surface/30 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-xl font-bold tracking-[0.3em] text-text-primary hover:text-accent transition-colors">
-              FORGE
-            </Link>
-            <span className="px-1.5 py-0.5 border border-accent text-[8px] font-bold tracking-widest text-text-accent rounded-xs">
-              MEMBER
-            </span>
-          </div>
-
-          <nav className="flex items-center gap-6 text-[10px] font-bold tracking-widest uppercase">
-            <Link href="/dashboard" className="text-text-secondary hover:text-text-primary transition-colors">
-              DASHBOARD
-            </Link>
-            <Link href="/dashboard/exercises" className="text-text-accent transition-colors">
-              WORKOUTS
-            </Link>
-            <Link href="/dashboard" className="text-text-secondary hover:text-text-primary transition-colors">
-              PROFILE
-            </Link>
-            <Link href="/" className="px-4 py-2 border border-border-subtle hover:border-accent hover:text-text-accent transition-all duration-300 rounded-xs">
-              DISCONNECT
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      {/* Main Page Layout */}
-      <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-subtle pb-6">
-          <div className="flex flex-col gap-2">
-            <span className="text-[10px] font-bold text-accent tracking-widest uppercase font-mono">
-              EXERCISE PROTOCOL LIBRARY
-            </span>
-            <h2 className="text-3xl font-bold tracking-tight text-text-primary uppercase">
-              WORKOUT EXERCISES
-            </h2>
-            <p className="text-xs text-text-secondary max-w-md leading-relaxed">
-              Browse the library of default training movements and customized targets.
-            </p>
-          </div>
-
-          {/* Quick link back */}
-          <Link href="/dashboard">
-            <Button variant="secondary" className="text-xs py-2">← Back to Dashboard</Button>
-          </Link>
+    <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-subtle pb-6">
+        <div className="flex flex-col gap-2">
+          <span className="text-[10px] font-bold text-accent tracking-widest uppercase font-mono">
+            EXERCISE PROTOCOL LIBRARY
+          </span>
+          <h2 className="text-3xl font-bold tracking-tight text-text-primary uppercase">
+            WORKOUT EXERCISES
+          </h2>
+          <p className="text-xs text-text-secondary max-w-md leading-relaxed">
+            Browse the library of default training movements and customized targets.
+          </p>
         </div>
 
-        {/* Filter Controls Row */}
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-surface border border-border-subtle p-5 rounded-md shadow-card">
-          {/* Search box */}
-          <div className="md:col-span-2">
-            <Input
-              id="search"
-              type="text"
-              label="Search Movements"
-              placeholder="e.g. Squat, Chest, Pull..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+        {/* Quick link back */}
+        <Link href="/dashboard">
+          <Button variant="secondary" className="text-xs py-2">← Back to Dashboard</Button>
+        </Link>
+      </div>
 
-          {/* Custom Dropdown Sort By */}
-          <Dropdown
-            label="Sort By"
-            options={sortByOptions}
-            selectedValue={sortBy}
-            onChange={(val) => setSortBy(val)}
+      {/* Filter Controls Row */}
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-surface border border-border-subtle p-5 rounded-md shadow-card">
+        {/* Search box */}
+        <div className="md:col-span-2">
+          <Input
+            id="search"
+            type="text"
+            label="Search Movements"
+            placeholder="e.g. Squat, Chest, Pull..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
 
-          {/* Custom Dropdown Order Direction */}
-          <Dropdown
-            label="Order Direction"
-            options={orderOptions}
-            selectedValue={order}
-            onChange={(val) => setOrder(val)}
-          />
+        {/* Custom Dropdown Sort By */}
+        <Dropdown
+          label="Sort By"
+          options={sortByOptions}
+          selectedValue={sortBy}
+          onChange={(val) => setSortBy(val)}
+        />
+
+        {/* Custom Dropdown Order Direction */}
+        <Dropdown
+          label="Order Direction"
+          options={orderOptions}
+          selectedValue={order}
+          onChange={(val) => setOrder(val)}
+        />
+      </section>
+
+      {/* Exercises Grid List */}
+      {loading ? (
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Render 6 sleek skeleton cards while loading */}
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={index} className="h-[78px] w-full" />
+          ))}
         </section>
-
-        {/* Exercises Grid List */}
-        {loading ? (
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Render 6 sleek skeleton cards while loading */}
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Skeleton key={index} className="h-[78px] w-full" />
-            ))}
-          </section>
-        ) : exercises.length > 0 ? (
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {exercises.map((exercise) => (
-              <div
-                key={exercise.id}
-                className="bg-surface border border-border-subtle p-5 rounded-md hover:border-accent-muted transition-all duration-300 flex items-center justify-between shadow-card group"
-              >
-                <div className="flex flex-col gap-1">
-                  <span className="text-[9px] tracking-widest font-mono text-text-muted">ID: {exercise.id.slice(0, 8)}</span>
-                  <h4 className="text-sm font-bold text-text-primary uppercase group-hover:text-text-accent transition-colors">
-                    {exercise.name}
-                  </h4>
-                </div>
-                <span className="text-[9px] bg-bg border border-border-subtle px-2.5 py-1 text-text-secondary rounded-xs uppercase font-semibold tracking-wider font-mono">
-                  {exercise.target_muscle}
-                </span>
+      ) : exercises.length > 0 ? (
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {exercises.map((exercise) => (
+            <div
+              key={exercise.id}
+              className="bg-surface border border-border-subtle p-5 rounded-md hover:border-accent-muted transition-all duration-300 flex items-center justify-between shadow-card group"
+            >
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] tracking-widest font-mono text-text-muted">ID: {exercise.id.slice(0, 8)}</span>
+                <h4 className="text-sm font-bold text-text-primary uppercase group-hover:text-text-accent transition-colors">
+                  {exercise.name}
+                </h4>
               </div>
-            ))}
-          </section>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 border border-dashed border-border-subtle rounded-md bg-surface/10">
-            <span className="text-2xl mb-2">🔍</span>
-            <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">
-              No Movements Found
-            </h4>
-            <p className="text-xs text-text-muted mt-1 uppercase tracking-wider font-mono">
-              Adjust your search keywords.
-            </p>
-          </div>
-        )}
-      </main>
-    </div>
+              <span className="text-[9px] bg-bg border border-border-subtle px-2.5 py-1 text-text-secondary rounded-xs uppercase font-semibold tracking-wider font-mono">
+                {exercise.target_muscle}
+              </span>
+            </div>
+          ))}
+        </section>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-20 border border-dashed border-border-subtle rounded-md bg-surface/10">
+          <span className="text-2xl mb-2">🔍</span>
+          <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">
+            No Movements Found
+          </h4>
+          <p className="text-xs text-text-muted mt-1 uppercase tracking-wider font-mono">
+            Adjust your search keywords.
+          </p>
+        </div>
+      )}
+    </main>
   );
 }
