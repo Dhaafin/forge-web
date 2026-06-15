@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Input } from "../../../components/atoms/Input";
 import { Button } from "../../../components/atoms/Button";
 import { Badge } from "../../../components/atoms/Badge";
+import { Skeleton } from "../../../components/atoms/Skeleton";
+import { Dropdown } from "../../../components/molecules/Dropdown";
 import { fetchExercises, Exercise } from "../../../services/workouts";
 
 // Beautiful default fallback exercises in case backend is offline
@@ -26,21 +28,23 @@ const fallbackExercises: Exercise[] = [
 export default function ExercisesPage() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "target_muscle">("name");
-  const [order, setOrder] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [order, setOrder] = useState<string>("asc");
   const [loading, setLoading] = useState(true);
 
   const loadExercises = async () => {
     setLoading(true);
+    // Artificially wait slightly to allow skeleton animation to showcase smoothly
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
     try {
       const data = await fetchExercises({
         search: search || undefined,
-        sort_by: sortBy,
-        order,
+        sort_by: sortBy as "name" | "target_muscle",
+        order: order as "asc" | "desc",
       });
       // Fallback if API returned empty array and we want to show content
       if (!data || data.length === 0) {
-        // Apply local filtering to mock fallback data
         const filtered = fallbackExercises.filter(
           (ex) =>
             ex.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -58,13 +62,11 @@ export default function ExercisesPage() {
       }
     } catch (err: any) {
       console.warn("API request failed, utilizing fallback exercises database:", err.message);
-      // Filter fallback locally for search if api is down
       const filtered = fallbackExercises.filter(
         (ex) =>
           ex.name.toLowerCase().includes(search.toLowerCase()) ||
           ex.target_muscle.toLowerCase().includes(search.toLowerCase())
       );
-      // Sort fallback locally
       filtered.sort((a, b) => {
         const fieldA = sortBy === "name" ? a.name : a.target_muscle;
         const fieldB = sortBy === "name" ? b.name : b.target_muscle;
@@ -80,6 +82,16 @@ export default function ExercisesPage() {
   useEffect(() => {
     loadExercises();
   }, [search, sortBy, order]);
+
+  const sortByOptions = [
+    { value: "name", label: "Name" },
+    { value: "target_muscle", label: "Target Muscle" },
+  ];
+
+  const orderOptions = [
+    { value: "asc", label: "Ascending" },
+    { value: "desc", label: "Descending" },
+  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-bg text-text-primary">
@@ -147,44 +159,31 @@ export default function ExercisesPage() {
             />
           </div>
 
-          {/* Sort By selector */}
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold tracking-widest text-text-secondary uppercase font-mono">
-              Sort By
-            </label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "name" | "target_muscle")}
-              className="px-4 py-3 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm transition-all duration-200 outline-none focus:border-accent"
-            >
-              <option value="name">Name</option>
-              <option value="target_muscle">Target Muscle</option>
-            </select>
-          </div>
+          {/* Custom Dropdown Sort By */}
+          <Dropdown
+            label="Sort By"
+            options={sortByOptions}
+            selectedValue={sortBy}
+            onChange={(val) => setSortBy(val)}
+          />
 
-          {/* Order selector */}
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold tracking-widest text-text-secondary uppercase font-mono">
-              Order Direction
-            </label>
-            <select
-              value={order}
-              onChange={(e) => setOrder(e.target.value as "asc" | "desc")}
-              className="px-4 py-3 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm transition-all duration-200 outline-none focus:border-accent"
-            >
-              <option value="asc">Ascending</option>
-              <option value="desc">Descending</option>
-            </select>
-          </div>
+          {/* Custom Dropdown Order Direction */}
+          <Dropdown
+            label="Order Direction"
+            options={orderOptions}
+            selectedValue={order}
+            onChange={(val) => setOrder(val)}
+          />
         </section>
 
         {/* Exercises Grid List */}
         {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <span className="text-xs tracking-widest text-text-secondary uppercase animate-pulse">
-              Querying database registry...
-            </span>
-          </div>
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Render 6 sleek skeleton cards while loading */}
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton key={index} className="h-[78px] w-full" />
+            ))}
+          </section>
         ) : exercises.length > 0 ? (
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {exercises.map((exercise) => (
