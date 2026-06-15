@@ -58,6 +58,12 @@ forge-web/
   - Store external endpoint URLs in environment variables (e.g. `process.env.BACKEND_API_URL` or `NEXT_PUBLIC_API_URL`).
   - Service functions should be organized in `src/services/` (e.g. `src/services/auth.ts`).
 
+## Reusable UI Components
+- **Dropdown (`src/components/molecules/Dropdown.tsx`)**: Sleek interactive dropdown select component driven by Framer Motion animations.
+  - *Props*: `label` (optional string), `options` (`{ value: string; label: string }[]`), `selectedValue` (string), `onChange` (`(value: string) => void`).
+- **FlashMessage (`src/components/molecules/FlashMessage.tsx`)**: Reusable dismissible floating alert banner with slick sliding Framer Motion animations and auto-dismiss timing.
+  - *Props*: `message` (string), `type` (`success` | `error` | `warning` | `info`), `isVisible` (boolean), `onClose` (`() => void`), `duration` (optional number in ms).
+
 ## Agent Best Practices
 
 ### For ALL agents
