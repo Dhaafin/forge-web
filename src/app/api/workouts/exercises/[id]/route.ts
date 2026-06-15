@@ -49,3 +49,34 @@ export async function PUT(
     return NextResponse.json({ error: message }, { status });
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const exerciseId = resolvedParams.id;
+
+    const accessToken = req.cookies.get("access_token")?.value;
+    const backendUrl = process.env.BACKEND_API_URL || "http://127.0.0.1:8000";
+    const exercisesEndpoint = `${backendUrl}/api/v1/workouts/exercises/${exerciseId}`;
+
+    const headers: Record<string, string> = {};
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+
+    await axios.delete(exercisesEndpoint, {
+      headers,
+    });
+
+    return new NextResponse(null, { status: 204 });
+  } catch (err: any) {
+    console.error("Delete Exercise Proxy Error:", err.message);
+    const status = err.response?.status || 500;
+    const message = err.response?.data?.detail || "Failed to delete exercise";
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+

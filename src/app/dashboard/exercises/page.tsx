@@ -8,7 +8,7 @@ import { Badge } from "../../../components/atoms/Badge";
 import { Skeleton } from "../../../components/atoms/Skeleton";
 import { Dropdown } from "../../../components/molecules/Dropdown";
 import { Modal } from "../../../components/molecules/Modal";
-import { fetchExercises, createExercise, updateExercise, Exercise } from "../../../services/workouts";
+import { fetchExercises, createExercise, updateExercise, deleteExercise, Exercise } from "../../../services/workouts";
 import { useFlash } from "../../../contexts/FlashContext";
 
 // Target Muscle constants for registry
@@ -62,6 +62,10 @@ export default function ExercisesPage() {
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [editExerciseName, setEditExerciseName] = useState("");
   const [editExerciseMuscle, setEditExerciseMuscle] = useState("Chest");
+
+  // Form states for deleting exercise
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deletingExercise, setDeletingExercise] = useState<Exercise | null>(null);
 
   const loadExercises = async () => {
     setLoading(true);
@@ -205,6 +209,30 @@ export default function ExercisesPage() {
     { value: "name", label: "Name" },
     { value: "target_muscle", label: "Target Muscle" },
   ];
+  const handleDeleteExercise = async () => {
+    if (!deletingExercise) return;
+    setSubmitting(true);
+
+    try {
+      await deleteExercise(deletingExercise.id);
+      showFlash(`Exercise "${deletingExercise.name}" deleted successfully.`, "success");
+
+      // Update local fallback list if API fails later or for UI consistency
+      setLocalFallbackList((prev) => prev.filter((ex) => ex.id !== deletingExercise.id));
+      setIsDeleteOpen(false);
+      setDeletingExercise(null);
+      loadExercises();
+    } catch (err: any) {
+      console.warn("API delete failed, removing from locally synced fallback database:", err.message);
+
+      setLocalFallbackList((prev) => prev.filter((ex) => ex.id !== deletingExercise.id));
+      showFlash(`Exercise removed from local training library.`, "success");
+      setIsDeleteOpen(false);
+      setDeletingExercise(null);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const orderOptions = [
     { value: "asc", label: "Ascending" },
@@ -307,6 +335,19 @@ export default function ExercisesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeletingExercise(exercise);
+                    setIsDeleteOpen(true);
+                  }}
+                  className="p-1.5 text-text-secondary hover:text-danger hover:bg-bg border border-transparent hover:border-border-subtle rounded-xs transition-all duration-200 cursor-pointer"
+                  title="Delete Exercise"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               </div>
             </div>
           ))}
@@ -406,6 +447,45 @@ export default function ExercisesPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteOpen}
+        onClose={() => {
+          setIsDeleteOpen(false);
+          setDeletingExercise(null);
+        }}
+        title="Confirm Deletion"
+        subtitle="RESTRICT CONSTRAINT"
+      >
+        <div className="flex flex-col gap-6">
+          <p className="text-xs text-text-secondary leading-relaxed">
+            Are you sure you want to delete <span className="text-text-primary font-bold uppercase">{deletingExercise?.name}</span>? This action is permanent and cannot be undone.
+          </p>
+
+          <div className="flex items-center justify-end gap-3 border-t border-border-subtle pt-4 mt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setIsDeleteOpen(false);
+                setDeletingExercise(null);
+              }}
+              className="text-xs py-2"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDeleteExercise}
+              disabled={submitting}
+              className="text-xs py-2 bg-danger hover:bg-danger/80 border-danger hover:border-danger/80 text-text-primary"
+            >
+              {submitting ? "Deleting..." : "Confirm Delete"}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </main>
   );

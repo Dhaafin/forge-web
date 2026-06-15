@@ -37,4 +37,9 @@ export async function updateExercise(id: string, name: string, targetMuscle: str
   return response.data;
 }
 
+export async function deleteExercise(id: string): Promise<void> {
+  await axios.delete(`/api/workouts/exercises/${id}`);
+}
+
+
 
