@@ -8,16 +8,30 @@ export default function DashboardPage() {
   return (
     <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-10">
       {/* Welcome Section */}
-      <div className="flex flex-col gap-2">
-        <span className="text-[10px] font-bold text-accent tracking-widest uppercase font-mono">
-          DAILY PERFORMANCE PROTOCOL
-        </span>
-        <h2 className="text-3xl font-bold tracking-tight text-text-primary uppercase">
-          Welcome back, Dhaafin
-        </h2>
-        <p className="text-xs text-text-secondary max-w-lg leading-relaxed">
-          Your conditioning session is ready for check-in today. Stay disciplined, forge ahead.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border-subtle pb-6">
+        <div className="flex flex-col gap-2">
+          <span className="text-[10px] font-bold text-accent tracking-widest uppercase font-mono">
+            DAILY PERFORMANCE PROTOCOL
+          </span>
+          <h2 className="text-3xl font-bold tracking-tight text-text-primary uppercase">
+            Welcome back, Dhaafin
+          </h2>
+          <p className="text-xs text-text-secondary max-w-lg leading-relaxed">
+            Your conditioning session is ready for check-in today. Stay disciplined, forge ahead.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard/workouts/record?mode=live">
+            <button className="px-4 py-2.5 bg-accent hover:bg-accent-hover text-bg text-[10px] font-bold tracking-widest uppercase rounded-xs transition-all duration-200 shadow-accent select-none cursor-pointer">
+              ⚡ Start Live Session
+            </button>
+          </Link>
+          <Link href="/dashboard/workouts/record?mode=past">
+            <button className="px-4 py-2.5 bg-surface border border-border-subtle hover:border-accent-muted text-text-primary text-[10px] font-bold tracking-widest uppercase rounded-xs transition-all duration-200 select-none cursor-pointer">
+              Log Past Session
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Performance Stats row */}

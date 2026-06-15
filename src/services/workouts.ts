@@ -78,6 +78,28 @@ export async function fetchWorkoutHistory(params: GetWorkoutHistoryParams = {}):
   return response.data;
 }
 
+export interface RecordSessionSetParams {
+  exercise_id: string;
+  set_number: number;
+  weight_kg: number;
+  reps: number;
+  set_type: "normal" | "warmup" | "drop" | "failure";
+}
+
+export interface RecordWorkoutSessionParams {
+  title: string;
+  duration_minutes: number;
+  start_time: string;
+  end_time: string;
+  sets: RecordSessionSetParams[];
+}
+
+export async function recordWorkoutSession(payload: RecordWorkoutSessionParams): Promise<WorkoutSession> {
+  const response = await axios.post<WorkoutSession>("/api/workouts/sessions", payload);
+  return response.data;
+}
+
+
 
 
 
