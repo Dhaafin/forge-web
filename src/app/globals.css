@@ -52,4 +52,28 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Custom scrollbar setup without arrows */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-subtle);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-muted);
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+
 
