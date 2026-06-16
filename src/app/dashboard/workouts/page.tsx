@@ -151,6 +151,7 @@ export default function WorkoutHistoryPage() {
   const handleDeleteEditSet = (setId: string) => {
     setDeletedSetIds((prev) => [...prev, setId]);
     setEditSets((prev) => prev.filter((s) => s.id !== setId));
+    showFlash("Set deleted.", "info");
   };
 
   // Delete session states
@@ -618,6 +619,7 @@ export default function WorkoutHistoryPage() {
         }}
         title="Edit Workout Session"
         subtitle="UPDATE PROTOCOL"
+        maxWidth="max-w-2xl"
       >
         <form onSubmit={handleUpdateSession} className="flex flex-col gap-6">
           <Input
@@ -728,8 +730,8 @@ export default function WorkoutHistoryPage() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting} className="text-xs py-2">
-              {submitting ? "Saving..." : "Save Changes"}
+            <Button type="submit" disabled={submitting} className="text-xs py-2 min-w-[120px] flex items-center justify-center gap-1.5">
+              {submitting ? <Spinner size="sm" /> : "Save Changes"}
             </Button>
           </div>
         </form>

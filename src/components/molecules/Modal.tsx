@@ -9,6 +9,8 @@ interface ModalProps {
   title?: string;
   subtitle?: string;
   children: ReactNode;
+  className?: string;
+  maxWidth?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -17,6 +19,8 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   subtitle,
   children,
+  className = "",
+  maxWidth = "max-w-md",
 }) => {
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -50,7 +54,7 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-surface border border-border-strong w-full max-w-md p-6 rounded-md shadow-elevated relative z-10 flex flex-col gap-6"
+            className={`bg-surface border border-border-strong w-full ${maxWidth} p-6 rounded-md shadow-elevated relative z-10 flex flex-col gap-6 ${className}`}
           >
             {/* Header info */}
             <div className="flex justify-between items-start">
