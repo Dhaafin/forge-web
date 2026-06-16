@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { Input } from "../../../../components/atoms/Input";
 import { Button } from "../../../../components/atoms/Button";
+import { Skeleton } from "../../../../components/atoms/Skeleton";
 import { Dropdown } from "../../../../components/molecules/Dropdown";
 import { fetchExercises, recordWorkoutSession, Exercise, RecordSessionSetParams } from "../../../../services/workouts";
 import { useFlash } from "../../../../contexts/FlashContext";
@@ -28,7 +29,11 @@ export default function RecordWorkoutPage() {
   const searchParams = useSearchParams();
   const { showFlash } = useFlash();
 
+  // Loading state
+  const [pageLoading, setPageLoading] = useState(true);
+
   // Mode state: 'live' or 'past'
+
   const initialMode = searchParams.get("mode") === "past" ? "past" : "live";
   const [mode, setMode] = useState<"live" | "past">(initialMode);
 
@@ -93,9 +98,12 @@ export default function RecordWorkoutPage() {
         if (mergedFallbacks.length > 0) {
           setSelectedExerciseId(mergedFallbacks[0].id);
         }
+      } finally {
+        setPageLoading(false);
       }
     };
     loadExercises();
+
 
     // Default title based on time of day
     const hour = new Date().getHours();
@@ -300,302 +308,371 @@ export default function RecordWorkoutPage() {
 
   return (
     <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-10 flex flex-col gap-8 relative">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-subtle pb-6">
-        <div className="flex flex-col gap-2">
-          <span className="text-[10px] font-bold text-accent tracking-widest uppercase font-mono">
-            TRAINING RECORD STATION
-          </span>
-          <h2 className="text-3xl font-bold tracking-tight text-text-primary uppercase">
-            LOG WORKOUT SESSION
-          </h2>
-        </div>
-
-        <Link href="/dashboard">
-          <Button variant="secondary" className="text-xs py-2">← Exit</Button>
-        </Link>
-      </div>
-
-      {/* Mode Switcher */}
-      <div className="flex bg-surface border border-border-subtle p-1 rounded-sm">
-        <button
-          type="button"
-          onClick={() => setMode("live")}
-          className={`flex-1 py-2.5 text-[10px] font-bold tracking-widest uppercase rounded-xs transition-all duration-200 cursor-pointer ${
-            mode === "live"
-              ? "bg-accent text-bg shadow-accent font-semibold"
-              : "text-text-secondary hover:text-text-primary"
-          }`}
-        >
-          Active Live Session
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("past")}
-          className={`flex-1 py-2.5 text-[10px] font-bold tracking-widest uppercase rounded-xs transition-all duration-200 cursor-pointer ${
-            mode === "past"
-              ? "bg-accent text-bg shadow-accent font-semibold"
-              : "text-text-secondary hover:text-text-primary"
-          }`}
-        >
-          Log Past Workout
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-        {/* Session Metadata Controls */}
-        <section className="bg-surface border border-border-subtle p-5 rounded-md shadow-card flex flex-col gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              id="sessionTitle"
-              type="text"
-              label="Workout Session Title"
-              placeholder="e.g. Morning Push Protocol"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-
-            {mode === "live" ? (
-              <div className="flex flex-col justify-center items-center md:items-end p-2 bg-bg/50 border border-border-subtle/50 rounded-xs">
-                <span className="text-[9px] font-bold tracking-widest text-accent uppercase font-mono mb-1">
-                  ACTIVE ELAPSED TIMER
-                </span>
-                <span className="text-3xl font-bold tracking-wider font-mono text-text-primary">
-                  {formatTimer(secondsElapsed)}
-                </span>
+      <AnimatePresence mode="wait">
+        {pageLoading ? (
+          <motion.div
+            key="skeleton"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col gap-8 w-full"
+          >
+            {/* Header Skeleton */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-subtle pb-6 animate-pulse">
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-3 w-36" />
+                <Skeleton className="h-9 w-64" />
               </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold tracking-widest text-text-secondary uppercase font-mono block mb-2">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    value={pastDate}
-                    onChange={(e) => setPastDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold tracking-widest text-text-secondary uppercase font-mono block mb-2">
-                    Start Time
-                  </label>
-                  <input
-                    type="time"
-                    value={pastTime}
-                    onChange={(e) => setPastTime(e.target.value)}
-                    className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <Input
-                    id="pastDuration"
-                    type="number"
-                    label="Minutes"
-                    value={pastDuration}
-                    onChange={(e) => setPastDuration(Number(e.target.value))}
-                    min={1}
-                    required
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Dynamic Exercise Selector */}
-        <section className="bg-surface border border-border-subtle p-5 rounded-md shadow-card flex flex-col gap-4">
-          <div className="flex flex-col md:flex-row gap-4 items-end">
-            <div className="flex-1">
-              <Dropdown
-                label="Choose Exercise to Add"
-                options={dropdownOptions}
-                selectedValue={selectedExerciseId}
-                onChange={(val) => setSelectedExerciseId(val)}
-                maxHeight="160px"
-              />
+              <Skeleton className="h-9 w-20" />
             </div>
-            <Button
-              type="button"
-              onClick={addExerciseToSession}
-              className="py-2.5 px-6 text-xs h-[42px] cursor-pointer"
-            >
-              + Add to Workout
-            </Button>
-          </div>
-        </section>
 
-        {/* Exercises List Builder */}
-        <section className="flex flex-col gap-6">
-          <AnimatePresence initial={false}>
-            {sessionExercises.length > 0 ? (
-              sessionExercises.map((se) => (
-                <motion.div
-                  key={se.exerciseId}
-                  layout
-                  initial={{ opacity: 0, y: 15, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -15, scale: 0.98 }}
-                  transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="bg-surface border border-border-subtle rounded-md flex flex-col relative"
-                >
-                  {/* Header */}
-                  <div className="px-5 py-4 border-b border-border-subtle/50 bg-bg/20 flex items-center justify-between rounded-t-md">
-                    <div className="flex items-center gap-3">
-                      <span className="text-[9px] bg-bg border border-accent/20 px-2 py-0.5 text-text-accent font-mono uppercase tracking-wider rounded-xs font-semibold">
-                        {se.target_muscle}
-                      </span>
-                      <h4 className="text-sm font-bold text-text-primary uppercase tracking-tight">
-                        {se.name}
-                      </h4>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeExerciseFromSession(se.exerciseId)}
-                      className="text-[10px] font-bold tracking-wider text-text-secondary hover:text-danger uppercase font-mono cursor-pointer transition-colors"
-                    >
-                      Remove Exercise
-                    </button>
-                  </div>
+            {/* Mode Switcher Skeleton */}
+            <Skeleton className="h-[48px] w-full" />
 
-                  {/* Sets details body */}
-                  <div className="p-5 flex flex-col gap-3">
-                    {se.sets.length > 0 && (
-                      <div className="grid grid-cols-12 gap-3 items-center mb-1">
-                        <span className="col-span-1 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono text-center">
-                          Set
-                        </span>
-                        <span className="col-span-3 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
-                          Weight (kg)
-                        </span>
-                        <span className="col-span-3 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
-                          Reps
-                        </span>
-                        <span className="col-span-4 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
-                          Set Type
-                        </span>
-                        <span className="col-span-1"></span>
-                      </div>
-                    )}
+            {/* Metadata Card Skeleton */}
+            <div className="bg-surface border border-border-subtle p-5 rounded-md shadow-card flex flex-col gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="flex flex-col gap-2 justify-center items-end p-2 bg-bg/50 border border-border-subtle/50 rounded-xs">
+                  <Skeleton className="h-2.5 w-28 mb-1" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              </div>
+            </div>
 
-                    <AnimatePresence initial={false}>
-                      {se.sets.map((set, idx) => (
-                        <motion.div
-                          key={set.id}
-                          layout
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.2, ease: "easeInOut" }}
-                          className="overflow-hidden"
-                        >
-                          <div className="grid grid-cols-12 gap-3 items-center py-1.5">
-                            <span className="col-span-1 text-xs font-semibold font-mono text-text-secondary text-center">
-                              {(idx + 1).toString().padStart(2, "0")}
-                            </span>
+            {/* Selector Skeleton */}
+            <div className="bg-surface border border-border-subtle p-5 rounded-md shadow-card flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row gap-4 items-end">
+                <div className="flex-1 flex flex-col gap-2">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <Skeleton className="h-[42px] w-36" />
+              </div>
+            </div>
 
-                            {/* Weight */}
-                            <div className="col-span-3">
-                              <input
-                                type="number"
-                                value={set.weight}
-                                onChange={(e) => updateSetField(se.exerciseId, idx, "weight", Number(e.target.value))}
-                                placeholder="Weight (kg)"
-                                className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
-                                required
-                                min={0}
-                              />
-                            </div>
+            {/* List Skeleton */}
+            <div className="bg-surface border border-border-subtle rounded-md p-5 flex flex-col gap-4">
+              <Skeleton className="h-4 w-48" />
+              <div className="flex flex-col gap-3">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="flex flex-col gap-8 w-full"
+          >
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-subtle pb-6">
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-bold text-accent tracking-widest uppercase font-mono">
+                  TRAINING RECORD STATION
+                </span>
+                <h2 className="text-3xl font-bold tracking-tight text-text-primary uppercase">
+                  LOG WORKOUT SESSION
+                </h2>
+              </div>
 
-                            {/* Reps */}
-                            <div className="col-span-3">
-                              <input
-                                type="number"
-                                value={set.reps}
-                                onChange={(e) => updateSetField(se.exerciseId, idx, "reps", Number(e.target.value))}
-                                placeholder="Reps"
-                                className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
-                                required
-                                min={0}
-                              />
-                            </div>
+              <Link href="/dashboard">
+                <Button variant="secondary" className="text-xs py-2">← Exit</Button>
+              </Link>
+            </div>
 
-                            {/* Set Type Dropdown */}
-                            <div className="col-span-4">
-                              <Dropdown
-                                options={setTypeOptions}
-                                selectedValue={set.type}
-                                onChange={(val) => updateSetField(se.exerciseId, idx, "type", val as any)}
-                                maxHeight="160px"
-                              />
-                            </div>
-
-                            {/* Remove Set Button */}
-                            <div className="col-span-1 flex justify-center">
-                              <button
-                                type="button"
-                                onClick={() => removeSetFromExercise(se.exerciseId, idx)}
-                                className="p-1.5 text-text-secondary hover:text-danger rounded-xs transition-colors cursor-pointer"
-                                title="Delete Set"
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-
-                    <div className="flex justify-end mt-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => addSetToExercise(se.exerciseId)}
-                        className="text-[10px] py-1.5 px-4"
-                      >
-                        + Add Set
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center py-16 border border-dashed border-border-subtle rounded-md bg-surface/10"
+            {/* Mode Switcher */}
+            <div className="flex bg-surface border border-border-subtle p-1 rounded-sm">
+              <button
+                type="button"
+                onClick={() => setMode("live")}
+                className={`flex-1 py-2.5 text-[10px] font-bold tracking-widest uppercase rounded-xs transition-all duration-200 cursor-pointer ${
+                  mode === "live"
+                    ? "bg-accent text-bg shadow-accent font-semibold"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
               >
-                <span className="text-xl mb-2">🏋️</span>
-                <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">
-                  No Exercises Logged Yet
-                </h4>
-                <p className="text-xs text-text-muted mt-1 uppercase tracking-wider font-mono">
-                  Select an exercise above to begin tracking.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                Active Live Session
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("past")}
+                className={`flex-1 py-2.5 text-[10px] font-bold tracking-widest uppercase rounded-xs transition-all duration-200 cursor-pointer ${
+                  mode === "past"
+                    ? "bg-accent text-bg shadow-accent font-semibold"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                Log Past Workout
+              </button>
+            </div>
 
-        </section>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+              {/* Session Metadata Controls */}
+              <section className="bg-surface border border-border-subtle p-5 rounded-md shadow-card flex flex-col gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Input
+                    id="sessionTitle"
+                    type="text"
+                    label="Workout Session Title"
+                    placeholder="e.g. Morning Push Protocol"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                  />
 
-        {/* Submit Bar */}
-        <div className="flex items-center justify-end gap-3 border-t border-border-subtle pt-6">
-          <Link href="/dashboard">
-            <Button type="button" variant="secondary" className="text-xs py-2 px-6">
-              Cancel
-            </Button>
-          </Link>
-          <Button type="submit" disabled={submitting} className="text-xs py-2 px-8">
-            {submitting ? "Saving Session..." : "Finish & Record Session"}
-          </Button>
-        </div>
-      </form>
+                  {mode === "live" ? (
+                    <div className="flex flex-col justify-center items-center md:items-end p-2 bg-bg/50 border border-border-subtle/50 rounded-xs">
+                      <span className="text-[9px] font-bold tracking-widest text-accent uppercase font-mono mb-1">
+                        ACTIVE ELAPSED TIMER
+                      </span>
+                      <span className="text-3xl font-bold tracking-wider font-mono text-text-primary">
+                        {formatTimer(secondsElapsed)}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold tracking-widest text-text-secondary uppercase font-mono block mb-2">
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          value={pastDate}
+                          onChange={(e) => setPastDate(e.target.value)}
+                          className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold tracking-widest text-text-secondary uppercase font-mono block mb-2">
+                          Start Time
+                        </label>
+                        <input
+                          type="time"
+                          value={pastTime}
+                          onChange={(e) => setPastTime(e.target.value)}
+                          className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Input
+                          id="pastDuration"
+                          type="number"
+                          label="Minutes"
+                          value={pastDuration}
+                          onChange={(e) => setPastDuration(Number(e.target.value))}
+                          min={1}
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* Dynamic Exercise Selector */}
+              <section className="bg-surface border border-border-subtle p-5 rounded-md shadow-card flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row gap-4 items-end">
+                  <div className="flex-1">
+                    <Dropdown
+                      label="Choose Exercise to Add"
+                      options={dropdownOptions}
+                      selectedValue={selectedExerciseId}
+                      onChange={(val) => setSelectedExerciseId(val)}
+                      maxHeight="160px"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={addExerciseToSession}
+                    className="py-2.5 px-6 text-xs h-[42px] cursor-pointer"
+                  >
+                    + Add to Workout
+                  </Button>
+                </div>
+              </section>
+
+              {/* Exercises List Builder */}
+              <section className="flex flex-col gap-6">
+                <AnimatePresence initial={false}>
+                  {sessionExercises.length > 0 ? (
+                    sessionExercises.map((se) => (
+                      <motion.div
+                        key={se.exerciseId}
+                        layout
+                        initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -15, scale: 0.98 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                        className="bg-surface border border-border-subtle rounded-md flex flex-col relative"
+                      >
+                        {/* Header */}
+                        <div className="px-5 py-4 border-b border-border-subtle/50 bg-bg/20 flex items-center justify-between rounded-t-md">
+                          <div className="flex items-center gap-3">
+                            <span className="text-[9px] bg-bg border border-accent/20 px-2 py-0.5 text-text-accent font-mono uppercase tracking-wider rounded-xs font-semibold">
+                              {se.target_muscle}
+                            </span>
+                            <h4 className="text-sm font-bold text-text-primary uppercase tracking-tight">
+                              {se.name}
+                            </h4>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeExerciseFromSession(se.exerciseId)}
+                            className="text-[10px] font-bold tracking-wider text-text-secondary hover:text-danger uppercase font-mono cursor-pointer transition-colors"
+                          >
+                            Remove Exercise
+                          </button>
+                        </div>
+
+                        {/* Sets details body */}
+                        <div className="p-5 flex flex-col gap-3">
+                          {se.sets.length > 0 && (
+                            <div className="grid grid-cols-12 gap-3 items-center mb-1">
+                              <span className="col-span-1 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono text-center">
+                                Set
+                              </span>
+                              <span className="col-span-3 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
+                                Weight (kg)
+                              </span>
+                              <span className="col-span-3 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
+                                Reps
+                              </span>
+                              <span className="col-span-4 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
+                                Set Type
+                              </span>
+                              <span className="col-span-1"></span>
+                            </div>
+                          )}
+
+                          <AnimatePresence initial={false}>
+                            {se.sets.map((set, idx) => (
+                              <motion.div
+                                key={set.id}
+                                layout
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.2, ease: "easeInOut" }}
+                                className="overflow-hidden"
+                              >
+                                <div className="grid grid-cols-12 gap-3 items-center py-1.5">
+                                  <span className="col-span-1 text-xs font-semibold font-mono text-text-secondary text-center">
+                                    {(idx + 1).toString().padStart(2, "0")}
+                                  </span>
+
+                                  {/* Weight */}
+                                  <div className="col-span-3">
+                                    <input
+                                      type="number"
+                                      value={set.weight}
+                                      onChange={(e) => updateSetField(se.exerciseId, idx, "weight", Number(e.target.value))}
+                                      placeholder="Weight (kg)"
+                                      className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
+                                      required
+                                      min={0}
+                                    />
+                                  </div>
+
+                                  {/* Reps */}
+                                  <div className="col-span-3">
+                                    <input
+                                      type="number"
+                                      value={set.reps}
+                                      onChange={(e) => updateSetField(se.exerciseId, idx, "reps", Number(e.target.value))}
+                                      placeholder="Reps"
+                                      className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
+                                      required
+                                      min={0}
+                                    />
+                                  </div>
+
+                                  {/* Set Type Dropdown */}
+                                  <div className="col-span-4">
+                                    <Dropdown
+                                      options={setTypeOptions}
+                                      selectedValue={set.type}
+                                      onChange={(val) => updateSetField(se.exerciseId, idx, "type", val as any)}
+                                      maxHeight="160px"
+                                    />
+                                  </div>
+
+                                  {/* Remove Set Button */}
+                                  <div className="col-span-1 flex justify-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => removeSetFromExercise(se.exerciseId, idx)}
+                                      className="p-1.5 text-text-secondary hover:text-danger rounded-xs transition-colors cursor-pointer"
+                                      title="Delete Set"
+                                    >
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </AnimatePresence>
+
+                          <div className="flex justify-end mt-2">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              onClick={() => addSetToExercise(se.exerciseId)}
+                              className="text-[10px] py-1.5 px-4"
+                            >
+                              + Add Set
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex flex-col items-center justify-center py-16 border border-dashed border-border-subtle rounded-md bg-surface/10"
+                    >
+                      <span className="text-xl mb-2">🏋️</span>
+                      <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">
+                        No Exercises Logged Yet
+                      </h4>
+                      <p className="text-xs text-text-muted mt-1 uppercase tracking-wider font-mono">
+                        Select an exercise above to begin tracking.
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+              </section>
+
+              {/* Submit Bar */}
+              <div className="flex items-center justify-end gap-3 border-t border-border-subtle pt-6">
+                <Link href="/dashboard">
+                  <Button type="button" variant="secondary" className="text-xs py-2 px-6">
+                    Cancel
+                  </Button>
+                </Link>
+                <Button type="submit" disabled={submitting} className="text-xs py-2 px-8">
+                  {submitting ? "Saving Session..." : "Finish & Record Session"}
+                </Button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
+
