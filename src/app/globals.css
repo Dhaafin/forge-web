@@ -52,6 +52,7 @@ body {
   font-family: var(--font-sans);
 }
 
+
 /* Custom scrollbar setup without arrows */
 ::-webkit-scrollbar {
   width: 6px;
@@ -73,6 +74,17 @@ body {
 
 ::-webkit-scrollbar-button {
   display: none;
+}
+
+/* Hide number input spin arrows */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
 }
 
 

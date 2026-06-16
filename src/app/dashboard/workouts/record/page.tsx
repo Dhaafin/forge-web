@@ -428,12 +428,13 @@ export default function RecordWorkoutPage() {
         <section className="flex flex-col gap-6">
           {sessionExercises.length > 0 ? (
             sessionExercises.map((se) => (
+
               <div
                 key={se.exerciseId}
-                className="bg-surface border border-border-subtle rounded-md overflow-hidden flex flex-col"
+                className="bg-surface border border-border-subtle rounded-md flex flex-col relative"
               >
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-border-subtle/50 bg-bg/20 flex items-center justify-between">
+                <div className="px-5 py-4 border-b border-border-subtle/50 bg-bg/20 flex items-center justify-between rounded-t-md">
                   <div className="flex items-center gap-3">
                     <span className="text-[9px] bg-bg border border-accent/20 px-2 py-0.5 text-text-accent font-mono uppercase tracking-wider rounded-xs font-semibold">
                       {se.target_muscle}
@@ -453,6 +454,24 @@ export default function RecordWorkoutPage() {
 
                 {/* Sets details body */}
                 <div className="p-5 flex flex-col gap-3">
+                  {se.sets.length > 0 && (
+                    <div className="grid grid-cols-12 gap-3 items-center mb-1">
+                      <span className="col-span-1 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono text-center">
+                        Set
+                      </span>
+                      <span className="col-span-3 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
+                        Weight (kg)
+                      </span>
+                      <span className="col-span-3 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
+                        Reps
+                      </span>
+                      <span className="col-span-4 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
+                        Set Type
+                      </span>
+                      <span className="col-span-1"></span>
+                    </div>
+                  )}
+
                   {se.sets.map((set, idx) => (
                     <div
                       key={idx}
@@ -490,17 +509,12 @@ export default function RecordWorkoutPage() {
 
                       {/* Set Type Dropdown */}
                       <div className="col-span-4">
-                        <select
-                          value={set.type}
-                          onChange={(e) => updateSetField(se.exerciseId, idx, "type", e.target.value as any)}
-                          className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none cursor-pointer"
-                        >
-                          {setTypeOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
+                        <Dropdown
+                          options={setTypeOptions}
+                          selectedValue={set.type}
+                          onChange={(val) => updateSetField(se.exerciseId, idx, "type", val as any)}
+                          maxHeight="160px"
+                        />
                       </div>
 
                       {/* Remove Set Button */}
