@@ -9,7 +9,7 @@ import { Skeleton } from "../../../components/atoms/Skeleton";
 import { Spinner } from "../../../components/atoms/Spinner";
 import { Dropdown } from "../../../components/molecules/Dropdown";
 import { Modal } from "../../../components/molecules/Modal";
-import { fetchWorkoutHistory, updateWorkoutSession, deleteWorkoutSession, getWorkoutAiAnalysis, WorkoutSession } from "../../../services/workouts";
+import { fetchWorkoutHistory, updateWorkoutSession, deleteWorkoutSession, getWorkoutAiAnalysis, updateWorkoutSet, deleteWorkoutSet, WorkoutSession, WorkoutSet } from "../../../services/workouts";
 
 import { useFlash } from "../../../contexts/FlashContext";
 
@@ -72,6 +72,8 @@ export default function WorkoutHistoryPage() {
   const [editingSession, setEditingSession] = useState<WorkoutSession | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDuration, setEditDuration] = useState(0);
+  const [editSets, setEditSets] = useState<WorkoutSet[]>([]);
+  const [deletedSetIds, setDeletedSetIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // AI Analyzer states
@@ -98,6 +100,8 @@ export default function WorkoutHistoryPage() {
     setEditingSession(session);
     setEditTitle(session.title);
     setEditDuration(session.duration_minutes);
+    setEditSets(JSON.parse(JSON.stringify(session.sets || []))); // deep copy
+    setDeletedSetIds([]);
     setIsEditOpen(true);
   };
 
@@ -109,21 +113,44 @@ export default function WorkoutHistoryPage() {
     }
     setSubmitting(true);
     try {
-      const updated = await updateWorkoutSession(editingSession.id, editTitle, Number(editDuration));
-      showFlash(`Workout session "${updated.title}" updated successfully.`, "success");
+      // 1. Update session details
+      await updateWorkoutSession(editingSession.id, editTitle, Number(editDuration));
+
+      // 2. Perform set updates
+      if (editSets.length > 0) {
+        await Promise.all(
+          editSets.map((set) =>
+            updateWorkoutSet(set.id, Number(set.weight_kg), Number(set.reps), set.set_type || "normal")
+          )
+        );
+      }
+
+      // 3. Perform set deletions
+      if (deletedSetIds.length > 0) {
+        await Promise.all(deletedSetIds.map((id) => deleteWorkoutSet(id)));
+      }
+
+      showFlash(`Workout session updated successfully.`, "success");
       
-      setSessions((prev) =>
-        prev.map((s) => (s.id === editingSession.id ? { ...s, title: updated.title, duration_minutes: updated.duration_minutes } : s))
-      );
+      // 4. Reload full history to pick up recalculated PR flags and updated sets layout
+      await loadHistory();
       
       setIsEditOpen(false);
       setEditingSession(null);
-    } catch (err: any) {
-      console.error("Failed to update session:", err.message);
-      showFlash("Failed to update session details.", "error");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleUpdateEditSetField = (setId: string, field: "weight_kg" | "reps" | "set_type", value: any) => {
+    setEditSets((prev) =>
+      prev.map((s) => (s.id === setId ? { ...s, [field]: value } : s))
+    );
+  };
+
+  const handleDeleteEditSet = (setId: string) => {
+    setDeletedSetIds((prev) => [...prev, setId]);
+    setEditSets((prev) => prev.filter((s) => s.id !== setId));
   };
 
   // Delete session states
@@ -612,6 +639,82 @@ export default function WorkoutHistoryPage() {
             min={1}
             required
           />
+
+          {/* Edit Sets Subsection */}
+          <div className="flex flex-col gap-3 max-h-[260px] overflow-y-auto pr-1 border-t border-border-subtle/50 pt-4">
+            <span className="text-[9px] font-mono font-bold tracking-widest text-text-muted uppercase">
+              Edit Session Sets
+            </span>
+
+            {editSets.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {editSets.map((set, idx) => (
+                  <div
+                    key={set.id}
+                    className="flex flex-col gap-2 p-3 bg-surface border border-border-subtle rounded-sm relative"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-text-accent font-semibold uppercase font-mono">
+                        {set.exercise?.name || "Exercise Record"} ({set.exercise?.target_muscle})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteEditSet(set.id)}
+                        className="text-[9px] text-text-secondary hover:text-danger font-mono uppercase font-bold cursor-pointer"
+                      >
+                        Delete Set
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[8px] text-text-muted font-mono tracking-widest uppercase">Weight (kg)</span>
+                        <input
+                          type="number"
+                          value={set.weight_kg}
+                          onChange={(e) => handleUpdateEditSetField(set.id, "weight_kg", Number(e.target.value))}
+                          className="px-2 py-1 bg-bg border border-border-subtle text-text-primary text-[11px] rounded-xs font-mono"
+                          required
+                          min={0}
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[8px] text-text-muted font-mono tracking-widest uppercase">Reps</span>
+                        <input
+                          type="number"
+                          value={set.reps}
+                          onChange={(e) => handleUpdateEditSetField(set.id, "reps", Number(e.target.value))}
+                          className="px-2 py-1 bg-bg border border-border-subtle text-text-primary text-[11px] rounded-xs font-mono"
+                          required
+                          min={0}
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[8px] text-text-muted font-mono tracking-widest uppercase">Set Type</span>
+                        <Dropdown
+                          options={[
+                            { value: "normal", label: "Normal" },
+                            { value: "warmup", label: "Warmup" },
+                            { value: "drop", label: "Drop Set" },
+                            { value: "failure", label: "Failure" },
+                          ]}
+                          selectedValue={set.set_type || "normal"}
+                          onChange={(val) => handleUpdateEditSetField(set.id, "set_type", val)}
+                          maxHeight="120px"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[10px] text-text-muted italic py-1">
+                No active sets left in this session.
+              </p>
+            )}
+          </div>
 
           <div className="flex items-center justify-end gap-3 border-t border-border-subtle pt-4 mt-2">
             <Button

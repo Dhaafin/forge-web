@@ -47,6 +47,7 @@ export interface WorkoutSet {
   weight_kg: number;
   reps: number;
   is_pr: boolean;
+  set_type?: string;
   exercise?: Exercise;
 }
 
@@ -115,6 +116,26 @@ export async function updateWorkoutSession(
 
 export async function deleteWorkoutSession(sessionId: string): Promise<void> {
   await axios.delete(`/api/workouts/sessions/${sessionId}`);
+}
+
+export async function updateWorkoutSet(
+  setId: string,
+  weightKg: number,
+  reps: number,
+  setType: string
+): Promise<any> {
+  const response = await axios.put(`/api/workouts/sets/${setId}`, null, {
+    params: {
+      weight_kg: weightKg,
+      reps,
+      set_type: setType,
+    },
+  });
+  return response.data;
+}
+
+export async function deleteWorkoutSet(setId: string): Promise<void> {
+  await axios.delete(`/api/workouts/sets/${setId}`);
 }
 
 export interface WorkoutAiAnalysis {
