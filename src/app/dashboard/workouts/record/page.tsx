@@ -8,8 +8,11 @@ import { Input } from "../../../../components/atoms/Input";
 import { Button } from "../../../../components/atoms/Button";
 import { Skeleton } from "../../../../components/atoms/Skeleton";
 import { Dropdown } from "../../../../components/molecules/Dropdown";
+import { DatePicker } from "../../../../components/molecules/DatePicker";
+import { TimePicker } from "../../../../components/molecules/TimePicker";
 import { fetchExercises, recordWorkoutSession, Exercise, RecordSessionSetParams } from "../../../../services/workouts";
 import { useFlash } from "../../../../contexts/FlashContext";
+
 
 interface SessionExercise {
   exerciseId: string;
@@ -439,30 +442,16 @@ export default function RecordWorkoutPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="text-[10px] font-bold tracking-widest text-text-secondary uppercase font-mono block mb-2">
-                          Date
-                        </label>
-                        <input
-                          type="date"
-                          value={pastDate}
-                          onChange={(e) => setPastDate(e.target.value)}
-                          className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold tracking-widest text-text-secondary uppercase font-mono block mb-2">
-                          Start Time
-                        </label>
-                        <input
-                          type="time"
-                          value={pastTime}
-                          onChange={(e) => setPastTime(e.target.value)}
-                          className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none"
-                          required
-                        />
-                      </div>
+                      <DatePicker
+                        label="Date"
+                        value={pastDate}
+                        onChange={(val) => setPastDate(val)}
+                      />
+                      <TimePicker
+                        label="Start Time"
+                        value={pastTime}
+                        onChange={(val) => setPastTime(val)}
+                      />
                       <div>
                         <Input
                           id="pastDuration"
@@ -475,6 +464,7 @@ export default function RecordWorkoutPage() {
                         />
                       </div>
                     </div>
+
                   )}
                 </div>
               </section>
