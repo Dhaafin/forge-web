@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "motion/react";
 import { Input } from "../../../components/atoms/Input";
 import { Button } from "../../../components/atoms/Button";
 import { Badge } from "../../../components/atoms/Badge";
 import { Skeleton } from "../../../components/atoms/Skeleton";
 import { Dropdown } from "../../../components/molecules/Dropdown";
 import { Modal } from "../../../components/molecules/Modal";
+
 import { fetchExercises, createExercise, updateExercise, deleteExercise, Exercise } from "../../../services/workouts";
 import { useFlash } from "../../../contexts/FlashContext";
 
@@ -281,7 +283,12 @@ export default function ExercisesPage() {
 
   return (
     <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-8 relative">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-subtle pb-6">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-subtle pb-6"
+      >
         <div className="flex flex-col gap-2">
           <span className="text-[10px] font-bold text-accent tracking-widest uppercase font-mono">
             EXERCISE PROTOCOL LIBRARY
@@ -303,10 +310,15 @@ export default function ExercisesPage() {
             <Button variant="secondary" className="text-xs py-2">← Dashboard</Button>
           </Link>
         </div>
-      </div>
+      </motion.div>
 
       {/* Filter Controls Row */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-surface border border-border-subtle p-5 rounded-md shadow-card">
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+        className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-surface border border-border-subtle p-5 rounded-md shadow-card"
+      >
         {/* Search box */}
         <div className="md:col-span-2">
           <Input
@@ -334,70 +346,100 @@ export default function ExercisesPage() {
           selectedValue={order}
           onChange={(val) => setOrder(val)}
         />
-      </section>
+      </motion.section>
 
       {/* Exercises Grid List */}
-      {loading ? (
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton key={index} className="h-[78px] w-full" />
-          ))}
-        </section>
-      ) : exercises.length > 0 ? (
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {exercises.map((exercise) => (
-            <div
-              key={exercise.id}
-              className="bg-surface border border-border-subtle p-5 rounded-md hover:border-accent-muted transition-all duration-300 flex items-center justify-between shadow-card group"
-            >
-              <div className="flex flex-col gap-1 pr-4">
-                <span className="text-[9px] tracking-widest font-mono text-text-muted">ID: {exercise.id.slice(0, 8)}</span>
-                <h4 className="text-sm font-bold text-text-primary uppercase group-hover:text-text-accent transition-colors">
-                  {exercise.name}
-                </h4>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[9px] bg-bg border border-border-subtle px-2.5 py-1 text-text-secondary rounded-xs uppercase font-semibold tracking-wider font-mono">
-                  {exercise.target_muscle}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => startEdit(exercise)}
-                  className="p-1.5 text-text-secondary hover:text-text-accent hover:bg-bg border border-transparent hover:border-border-subtle rounded-xs transition-all duration-200 cursor-pointer"
-                  title="Edit Exercise"
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="skeleton"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full"
+          >
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton key={index} className="h-[78px] w-full" />
+            ))}
+          </motion.div>
+        ) : exercises.length > 0 ? (
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full"
+          >
+            <AnimatePresence initial={false}>
+              {exercises.map((exercise) => (
+                <motion.div
+                  key={exercise.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="bg-surface border border-border-subtle p-5 rounded-md hover:border-accent-muted transition-all duration-300 flex items-center justify-between shadow-card group"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDeletingExercise(exercise);
-                    setIsDeleteOpen(true);
-                  }}
-                  className="p-1.5 text-text-secondary hover:text-danger hover:bg-bg border border-transparent hover:border-border-subtle rounded-xs transition-all duration-200 cursor-pointer"
-                  title="Delete Exercise"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ))}
-        </section>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-20 border border-dashed border-border-subtle rounded-md bg-surface/10">
-          <span className="text-2xl mb-2">🔍</span>
-          <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">
-            No Movements Found
-          </h4>
-          <p className="text-xs text-text-muted mt-1 uppercase tracking-wider font-mono">
-            Adjust your search keywords.
-          </p>
-        </div>
-      )}
+                  <div className="flex flex-col gap-1 pr-4">
+                    <span className="text-[9px] tracking-widest font-mono text-text-muted">ID: {exercise.id.slice(0, 8)}</span>
+                    <h4 className="text-sm font-bold text-text-primary uppercase group-hover:text-text-accent transition-colors">
+                      {exercise.name}
+                    </h4>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] bg-bg border border-border-subtle px-2.5 py-1 text-text-secondary rounded-xs uppercase font-semibold tracking-wider font-mono">
+                      {exercise.target_muscle}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => startEdit(exercise)}
+                      className="p-1.5 text-text-secondary hover:text-text-accent hover:bg-bg border border-transparent hover:border-border-subtle rounded-xs transition-all duration-200 cursor-pointer"
+                      title="Edit Exercise"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeletingExercise(exercise);
+                        setIsDeleteOpen(true);
+                      }}
+                      className="p-1.5 text-text-secondary hover:text-danger hover:bg-bg border border-transparent hover:border-border-subtle rounded-xs transition-all duration-200 cursor-pointer"
+                      title="Delete Exercise"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center justify-center py-20 border border-dashed border-border-subtle rounded-md bg-surface/10 w-full"
+          >
+            <span className="text-2xl mb-2">🔍</span>
+            <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">
+              No Movements Found
+            </h4>
+            <p className="text-xs text-text-muted mt-1 uppercase tracking-wider font-mono">
+              Adjust your search keywords.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* Reusable Animated Custom Modal */}
       <Modal
