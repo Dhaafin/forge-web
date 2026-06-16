@@ -7,9 +7,12 @@ import { Button } from "../atoms/Button";
 import { loginUser } from "../../services/auth";
 import { useFlash } from "../../contexts/FlashContext";
 
+import { useAuth } from "../../contexts/AuthContext";
+
 export const LoginForm: React.FC = () => {
   const router = useRouter();
   const { showFlash } = useFlash();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,10 +28,10 @@ export const LoginForm: React.FC = () => {
     }
 
     try {
-      await loginUser(email, password);
+      const data = await loginUser(email, password);
       showFlash("VIP Access Decrypted. Welcome back.", "success");
-      // Route to dashboard on success
-      router.push("/dashboard");
+      // Call auth context login to sync state
+      login(data.access_token);
     } catch (err: any) {
       showFlash(
         err.response?.data?.error || 

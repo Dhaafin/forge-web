@@ -4,8 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { useAuth } from "../../contexts/AuthContext";
+
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   const links = [
     { href: "/dashboard", label: "DASHBOARD" },
@@ -40,12 +43,13 @@ export const Navbar: React.FC = () => {
               </Link>
             );
           })}
-          <Link
-            href="/"
-            className="px-4 py-2 border border-border-subtle hover:border-accent hover:text-text-accent transition-all duration-300 rounded-xs"
+          <button
+            type="button"
+            onClick={logout}
+            className="px-4 py-2 border border-border-subtle hover:border-accent hover:text-text-accent transition-all duration-300 rounded-xs cursor-pointer"
           >
             DISCONNECT
-          </Link>
+          </button>
         </nav>
       </div>
     </header>
