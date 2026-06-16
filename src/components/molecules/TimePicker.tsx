@@ -114,7 +114,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
                 <span className="text-[8px] font-bold text-text-muted font-mono tracking-widest uppercase mb-1">
                   Hour
                 </span>
-                <div className="flex flex-col gap-1 max-h-[140px] overflow-y-auto py-1 scrollbar-thin">
+                <div className="flex flex-col gap-1 max-h-[140px] overflow-y-auto py-1">
                   {hours.map((h) => {
                     const isSelected = selectedHour === h;
                     return (
@@ -140,7 +140,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
                 <span className="text-[8px] font-bold text-text-muted font-mono tracking-widest uppercase mb-1">
                   Min
                 </span>
-                <div className="flex flex-col gap-1 max-h-[140px] overflow-y-auto py-1 scrollbar-thin">
+                <div className="flex flex-col gap-1 max-h-[140px] overflow-y-auto py-1">
                   {/* Let's list individual minutes but in 5 min steps mainly, plus let user change via keypress or scrolling */}
                   {minutes.map((m) => {
                     const isSelected = selectedMinute === m;

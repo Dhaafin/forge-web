@@ -23,6 +23,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const parsedDate = value ? new Date(value) : new Date();
   const [currentYear, setCurrentYear] = useState(parsedDate.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(parsedDate.getMonth()); // 0-indexed
+  const [direction, setDirection] = useState(0); // -1 for prev, 1 for next
 
   // Close calendar when clicking outside
   useEffect(() => {
@@ -60,6 +61,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   };
 
   const handlePrevMonth = () => {
+    setDirection(-1);
     if (currentMonth === 0) {
       setCurrentMonth(11);
       setCurrentYear((prev) => prev - 1);
@@ -69,6 +71,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   };
 
   const handleNextMonth = () => {
+    setDirection(1);
     if (currentMonth === 11) {
       setCurrentMonth(0);
       setCurrentYear((prev) => prev + 1);
@@ -102,6 +105,21 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   }
 
   const weekdaysShort = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+
+  const slideVariants = {
+    enter: (dir: number) => ({
+      x: dir > 0 ? 12 : dir < 0 ? -12 : 0,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (dir: number) => ({
+      x: dir > 0 ? -12 : dir < 0 ? 12 : 0,
+      opacity: 0,
+    }),
+  };
 
   return (
     <div ref={containerRef} className={`flex flex-col gap-2 relative w-full ${className}`}>
@@ -181,33 +199,46 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               ))}
             </div>
 
-            {/* Grid Days */}
-            <div className="grid grid-cols-7 gap-1 text-center">
-              {calendarCells.map((day, idx) => {
-                if (day === null) {
-                  return <div key={`empty-${idx}`} />;
-                }
+            {/* Grid Days with slider animation */}
+            <div className="relative overflow-hidden min-h-[168px]">
+              <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+                <motion.div
+                  key={`${currentYear}-${currentMonth}`}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="grid grid-cols-7 gap-1 text-center w-full"
+                >
+                  {calendarCells.map((day, idx) => {
+                    if (day === null) {
+                      return <div key={`empty-${idx}`} />;
+                    }
 
-                // Check if current cell matches the selected value
-                const cellMonthStr = (currentMonth + 1).toString().padStart(2, "0");
-                const cellDayStr = day.toString().padStart(2, "0");
-                const isSelected = value === `${currentYear}-${cellMonthStr}-${cellDayStr}`;
+                    // Check if current cell matches the selected value
+                    const cellMonthStr = (currentMonth + 1).toString().padStart(2, "0");
+                    const cellDayStr = day.toString().padStart(2, "0");
+                    const isSelected = value === `${currentYear}-${cellMonthStr}-${cellDayStr}`;
 
-                return (
-                  <button
-                    key={`day-${day}`}
-                    type="button"
-                    onClick={() => handleDateSelect(day)}
-                    className={`h-7 w-7 text-[10px] font-mono font-semibold rounded-xs transition-colors flex items-center justify-center cursor-pointer ${
-                      isSelected
-                        ? "bg-accent text-bg font-bold"
-                        : "text-text-secondary hover:bg-surface hover:text-text-primary"
-                    }`}
-                  >
-                    {day}
-                  </button>
-                );
-              })}
+                    return (
+                      <button
+                        key={`day-${day}`}
+                        type="button"
+                        onClick={() => handleDateSelect(day)}
+                        className={`h-7 w-7 text-[10px] font-mono font-semibold rounded-xs transition-colors flex items-center justify-center cursor-pointer ${
+                          isSelected
+                            ? "bg-accent text-bg font-bold"
+                            : "text-text-secondary hover:bg-surface hover:text-text-primary"
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </motion.div>
         )}
