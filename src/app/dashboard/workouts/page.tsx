@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Input } from "../../../components/atoms/Input";
 import { Button } from "../../../components/atoms/Button";
 import { Skeleton } from "../../../components/atoms/Skeleton";
+import { Spinner } from "../../../components/atoms/Spinner";
 import { Dropdown } from "../../../components/molecules/Dropdown";
 import { Modal } from "../../../components/molecules/Modal";
 import { fetchWorkoutHistory, updateWorkoutSession, deleteWorkoutSession, getWorkoutAiAnalysis, WorkoutSession } from "../../../services/workouts";
@@ -85,12 +86,8 @@ export default function WorkoutHistoryPage() {
       showFlash("AI analysis feedback generated successfully.", "success");
     } catch (err: any) {
       console.error("AI Coach Error:", err.message);
-      // fallback
-      setAiAnalysis((prev) => ({
-        ...prev,
-        [sessionId]: "AI Coach Feedback: Focus on progressive overload by increasing weight or reps by 5% in your next bench press session. Maintain high intensity and prioritize strict form. (Mock analysis generated - backend connection offline)"
-      }));
-      showFlash("AI feedback generated (using offline coaching rules).", "info");
+      const errMsg = err.response?.data?.error || err.message || "Failed to fetch AI feedback";
+      showFlash(`AI Coach Error: ${errMsg}`, "error");
     } finally {
       setLoadingAi((prev) => ({ ...prev, [sessionId]: false }));
     }
@@ -540,10 +537,8 @@ export default function WorkoutHistoryPage() {
                             </div>
 
                             {loadingAi[session.id] && (
-                              <div className="flex flex-col gap-2 py-2">
-                                <Skeleton className="h-3.5 w-full rounded-xs" />
-                                <Skeleton className="h-3.5 w-5/6 rounded-xs" />
-                                <Skeleton className="h-3.5 w-2/3 rounded-xs" />
+                              <div className="flex justify-center items-center py-4">
+                                <Spinner size="sm" />
                               </div>
                             )}
 
