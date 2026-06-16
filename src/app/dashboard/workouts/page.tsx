@@ -7,8 +7,10 @@ import { Input } from "../../../components/atoms/Input";
 import { Button } from "../../../components/atoms/Button";
 import { Skeleton } from "../../../components/atoms/Skeleton";
 import { Dropdown } from "../../../components/molecules/Dropdown";
-import { fetchWorkoutHistory, WorkoutSession } from "../../../services/workouts";
+import { Modal } from "../../../components/molecules/Modal";
+import { fetchWorkoutHistory, updateWorkoutSession, WorkoutSession } from "../../../services/workouts";
 import { useFlash } from "../../../contexts/FlashContext";
+
 
 // Fallback seed database in case backend connection is unavailable
 const defaultFallbackSessions: WorkoutSession[] = [
@@ -63,7 +65,48 @@ export default function WorkoutHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
 
+  // Edit session states
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingSession, setEditingSession] = useState<WorkoutSession | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDuration, setEditDuration] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  const startEdit = (e: React.MouseEvent, session: WorkoutSession) => {
+    e.stopPropagation(); // prevent card from toggling expansion
+    setEditingSession(session);
+    setEditTitle(session.title);
+    setEditDuration(session.duration_minutes);
+    setIsEditOpen(true);
+  };
+
+  const handleUpdateSession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSession || !editTitle) {
+      showFlash("Session title is required.", "warning");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const updated = await updateWorkoutSession(editingSession.id, editTitle, Number(editDuration));
+      showFlash(`Workout session "${updated.title}" updated successfully.`, "success");
+      
+      setSessions((prev) =>
+        prev.map((s) => (s.id === editingSession.id ? { ...s, title: updated.title, duration_minutes: updated.duration_minutes } : s))
+      );
+      
+      setIsEditOpen(false);
+      setEditingSession(null);
+    } catch (err: any) {
+      console.error("Failed to update session:", err.message);
+      showFlash("Failed to update session details.", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const loadHistory = async () => {
+
     setLoading(true);
     try {
       const data = await fetchWorkoutHistory({
@@ -335,6 +378,18 @@ export default function WorkoutHistoryPage() {
                         </div>
                       </div>
 
+                      {/* Edit Session Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => startEdit(e, session)}
+                        className="p-1.5 text-text-secondary hover:text-text-accent hover:bg-bg border border-transparent hover:border-border-subtle rounded-xs transition-all duration-200 cursor-pointer"
+                        title="Edit Session"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+
                       {/* Expand indicator arrow */}
                       <svg
                         className={`w-4 h-4 text-text-secondary transition-transform duration-300 ${
@@ -348,6 +403,7 @@ export default function WorkoutHistoryPage() {
                       </svg>
                     </div>
                   </div>
+
 
                   {/* Expanded Session Details */}
                   <AnimatePresence initial={false}>
@@ -426,6 +482,56 @@ export default function WorkoutHistoryPage() {
         )}
       </AnimatePresence>
 
+      {/* Edit Session Modal */}
+      <Modal
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setEditingSession(null);
+        }}
+        title="Edit Workout Session"
+        subtitle="UPDATE PROTOCOL"
+      >
+        <form onSubmit={handleUpdateSession} className="flex flex-col gap-6">
+          <Input
+            id="editSessionTitle"
+            type="text"
+            label="Workout Session Title"
+            placeholder="e.g. Evening Hypertrophy Leg Session"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            required
+          />
+
+          <Input
+            id="editSessionDuration"
+            type="number"
+            label="Duration (Minutes)"
+            value={editDuration}
+            onChange={(e) => setEditDuration(Number(e.target.value))}
+            min={1}
+            required
+          />
+
+          <div className="flex items-center justify-end gap-3 border-t border-border-subtle pt-4 mt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setIsEditOpen(false);
+                setEditingSession(null);
+              }}
+              className="text-xs py-2"
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={submitting} className="text-xs py-2">
+              {submitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </main>
   );
 }
+
