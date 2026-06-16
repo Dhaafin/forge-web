@@ -176,7 +176,12 @@ export default function WorkoutHistoryPage() {
 
   return (
     <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-8 relative">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-subtle pb-6">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-subtle pb-6"
+      >
         <div className="flex flex-col gap-2">
           <span className="text-[10px] font-bold text-accent tracking-widest uppercase font-mono">
             HISTORICAL LOG ARCHIVE
@@ -194,10 +199,15 @@ export default function WorkoutHistoryPage() {
             <Button variant="secondary" className="text-xs py-2">← Dashboard</Button>
           </Link>
         </div>
-      </div>
+      </motion.div>
 
       {/* Filters Block */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-surface border border-border-subtle p-5 rounded-md shadow-card">
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+        className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-surface border border-border-subtle p-5 rounded-md shadow-card"
+      >
         {/* Search */}
         <div className="md:col-span-1">
           <Input
@@ -233,163 +243,189 @@ export default function WorkoutHistoryPage() {
           selectedValue={order}
           onChange={(val) => setOrder(val)}
         />
-      </section>
+      </motion.section>
+
 
       {/* History Feed */}
-      {loading ? (
-        <section className="flex flex-col gap-4">
-          {Array.from({ length: 3 }).map((_, idx) => (
-            <Skeleton key={idx} className="h-24 w-full rounded-md" />
-          ))}
-        </section>
-      ) : sessions.length > 0 ? (
-        <section className="flex flex-col gap-4">
-          {sessions.map((session) => {
-            const isExpanded = expandedSessionId === session.id;
-            
-            // Extract distinct muscles worked
-            const muscles = Array.from(
-              new Set(session.sets.map((set) => set.exercise?.target_muscle).filter(Boolean))
-            );
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="skeleton"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col gap-4 w-full"
+          >
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <Skeleton key={idx} className="h-24 w-full rounded-md" />
+            ))}
+          </motion.div>
+        ) : sessions.length > 0 ? (
+          <motion.div
+            key="sessions-feed"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="flex flex-col gap-4 w-full"
+          >
+            {sessions.map((session) => {
+              const isExpanded = expandedSessionId === session.id;
+              
+              // Extract distinct muscles worked
+              const muscles = Array.from(
+                new Set(session.sets.map((set) => set.exercise?.target_muscle).filter(Boolean))
+              );
 
-            return (
-              <div
-                key={session.id}
-                className="bg-surface border border-border-subtle hover:border-accent-muted/60 transition-colors duration-300 rounded-md shadow-card overflow-hidden flex flex-col"
-              >
-                {/* Session Summary Header */}
-                <div
-                  onClick={() => toggleExpand(session.id)}
-                  className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer select-none"
+              return (
+                <motion.div
+                  key={session.id}
+                  layout
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="bg-surface border border-border-subtle hover:border-accent-muted/60 transition-colors duration-300 rounded-md shadow-card overflow-hidden flex flex-col"
                 >
-                  <div className="flex gap-4 items-start">
-                    {/* Left Accent indicator */}
-                    <div className="w-1 h-10 bg-accent rounded-full self-center" />
-                    
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-mono text-text-secondary tracking-widest">
-                        {formatSessionDate(session.start_time)} @ {formatSessionTime(session.start_time)}
-                      </span>
-                      <h4 className="text-base font-bold text-text-primary uppercase tracking-tight">
-                        {session.title}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        {muscles.map((muscle) => (
-                          <span
-                            key={muscle}
-                            className="text-[8px] bg-bg border border-border-subtle px-1.5 py-0.5 text-text-accent font-mono uppercase tracking-wider rounded-xs"
-                          >
-                            {muscle}
+                  {/* Session Summary Header */}
+                  <div
+                    onClick={() => toggleExpand(session.id)}
+                    className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer select-none"
+                  >
+                    <div className="flex gap-4 items-start">
+                      {/* Left Accent indicator */}
+                      <div className="w-1 h-10 bg-accent rounded-full self-center" />
+                      
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-mono text-text-secondary tracking-widest">
+                          {formatSessionDate(session.start_time)} @ {formatSessionTime(session.start_time)}
+                        </span>
+                        <h4 className="text-base font-bold text-text-primary uppercase tracking-tight">
+                          {session.title}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          {muscles.map((muscle) => (
+                            <span
+                              key={muscle}
+                              className="text-[8px] bg-bg border border-border-subtle px-1.5 py-0.5 text-text-accent font-mono uppercase tracking-wider rounded-xs"
+                            >
+                              {muscle}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-6 justify-between md:justify-end border-t md:border-t-0 border-border-subtle/50 pt-3 md:pt-0">
+                      {/* Stats Display */}
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <span className="block text-[8px] uppercase tracking-wider text-text-muted font-mono">
+                            DURATION
                           </span>
-                        ))}
+                          <span className="text-sm font-semibold font-mono text-text-primary">
+                            {session.duration_minutes}m
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="block text-[8px] uppercase tracking-wider text-text-muted font-mono">
+                            TOTAL SETS
+                          </span>
+                          <span className="text-sm font-semibold font-mono text-text-primary">
+                            {session.sets.length}
+                          </span>
+                        </div>
                       </div>
+
+                      {/* Expand indicator arrow */}
+                      <svg
+                        className={`w-4 h-4 text-text-secondary transition-transform duration-300 ${
+                          isExpanded ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 justify-between md:justify-end border-t md:border-t-0 border-border-subtle/50 pt-3 md:pt-0">
-                    {/* Stats Display */}
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <span className="block text-[8px] uppercase tracking-wider text-text-muted font-mono">
-                          DURATION
-                        </span>
-                        <span className="text-sm font-semibold font-mono text-text-primary">
-                          {session.duration_minutes}m
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="block text-[8px] uppercase tracking-wider text-text-muted font-mono">
-                          TOTAL SETS
-                        </span>
-                        <span className="text-sm font-semibold font-mono text-text-primary">
-                          {session.sets.length}
-                        </span>
-                      </div>
-                    </div>
+                  {/* Expanded Session Details */}
+                  <AnimatePresence initial={false}>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                      >
+                        <div className="px-5 pb-5 border-t border-border-subtle/40 pt-4 bg-bg/25">
+                          <span className="text-[9px] font-mono font-bold tracking-widest text-text-muted uppercase block mb-3">
+                            PERFORMANCE METRIC DETAILS
+                          </span>
 
-                    {/* Expand indicator arrow */}
-                    <svg
-                      className={`w-4 h-4 text-text-secondary transition-transform duration-300 ${
-                        isExpanded ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Expanded Session Details */}
-                <AnimatePresence initial={false}>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: "easeInOut" }}
-                    >
-                      <div className="px-5 pb-5 border-t border-border-subtle/40 pt-4 bg-bg/25">
-                        <span className="text-[9px] font-mono font-bold tracking-widest text-text-muted uppercase block mb-3">
-                          PERFORMANCE METRIC DETAILS
-                        </span>
-
-                        {session.sets.length > 0 ? (
-                          <div className="flex flex-col gap-2">
-                            {session.sets.map((set, idx) => (
-                              <div
-                                key={set.id}
-                                className="flex items-center justify-between py-2 px-3 border border-border-subtle bg-surface/40 hover:bg-surface/75 rounded-xs transition-colors text-xs"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <span className="text-[9px] text-text-muted font-mono">
-                                    {(idx + 1).toString().padStart(2, "0")}
-                                  </span>
-                                  <span className="font-semibold text-text-primary uppercase tracking-tight">
-                                    {set.exercise?.name || "Exercise Record"}
-                                  </span>
-                                  <span className="text-[9px] bg-surface-raised border border-border-strong px-2 py-0.5 text-text-secondary font-mono uppercase tracking-wider rounded-xs">
-                                    {set.exercise?.target_muscle}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                  <span className="font-mono text-text-primary">
-                                    {set.weight_kg} kg × {set.reps} reps
-                                  </span>
-                                  {set.is_pr && (
-                                    <span className="px-1.5 py-0.5 bg-success/15 border border-success/30 text-[8px] font-bold text-success rounded-xs font-mono uppercase tracking-widest">
-                                      🔥 PR
+                          {session.sets.length > 0 ? (
+                            <div className="flex flex-col gap-2">
+                              {session.sets.map((set, idx) => (
+                                <div
+                                  key={set.id}
+                                  className="flex items-center justify-between py-2 px-3 border border-border-subtle bg-surface/40 hover:bg-surface/75 rounded-xs transition-colors text-xs"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-[9px] text-text-muted font-mono">
+                                      {(idx + 1).toString().padStart(2, "0")}
                                     </span>
-                                  )}
+                                    <span className="font-semibold text-text-primary uppercase tracking-tight">
+                                      {set.exercise?.name || "Exercise Record"}
+                                    </span>
+                                    <span className="text-[9px] bg-surface-raised border border-border-strong px-2 py-0.5 text-text-secondary font-mono uppercase tracking-wider rounded-xs">
+                                      {set.exercise?.target_muscle}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                    <span className="font-mono text-text-primary">
+                                      {set.weight_kg} kg × {set.reps} reps
+                                    </span>
+                                    {set.is_pr && (
+                                      <span className="px-1.5 py-0.5 bg-success/15 border border-success/30 text-[8px] font-bold text-success rounded-xs font-mono uppercase tracking-widest">
+                                        🔥 PR
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-text-muted italic py-1">
-                            No individual training sets logs documented for this session.
-                          </p>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
-        </section>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-20 border border-dashed border-border-subtle rounded-md bg-surface/10">
-          <span className="text-2xl mb-2">📅</span>
-          <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">
-            No Workout Sessions Recorded
-          </h4>
-          <p className="text-xs text-text-muted mt-1 uppercase tracking-wider font-mono">
-            Adjust search keywords or timeframe settings.
-          </p>
-        </div>
-      )}
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-text-muted italic py-1">
+                              No individual training sets logs documented for this session.
+                            </p>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center justify-center py-20 border border-dashed border-border-subtle rounded-md bg-surface/10 w-full"
+          >
+            <span className="text-2xl mb-2">📅</span>
+            <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">
+              No Workout Sessions Recorded
+            </h4>
+            <p className="text-xs text-text-muted mt-1 uppercase tracking-wider font-mono">
+              Adjust search keywords or timeframe settings.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </main>
   );
 }
