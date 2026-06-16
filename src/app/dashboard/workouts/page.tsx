@@ -8,7 +8,8 @@ import { Button } from "../../../components/atoms/Button";
 import { Skeleton } from "../../../components/atoms/Skeleton";
 import { Dropdown } from "../../../components/molecules/Dropdown";
 import { Modal } from "../../../components/molecules/Modal";
-import { fetchWorkoutHistory, updateWorkoutSession, WorkoutSession } from "../../../services/workouts";
+import { fetchWorkoutHistory, updateWorkoutSession, deleteWorkoutSession, WorkoutSession } from "../../../services/workouts";
+
 import { useFlash } from "../../../contexts/FlashContext";
 
 
@@ -105,7 +106,36 @@ export default function WorkoutHistoryPage() {
     }
   };
 
+  // Delete session states
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deletingSession, setDeletingSession] = useState<WorkoutSession | null>(null);
+
+  const startDelete = (e: React.MouseEvent, session: WorkoutSession) => {
+    e.stopPropagation(); // prevent card from toggling expansion
+    setDeletingSession(session);
+    setIsDeleteOpen(true);
+  };
+
+  const handleDeleteSession = async () => {
+    if (!deletingSession) return;
+    setSubmitting(true);
+    try {
+      await deleteWorkoutSession(deletingSession.id);
+      showFlash(`Workout session "${deletingSession.title}" deleted successfully.`, "success");
+      
+      setSessions((prev) => prev.filter((s) => s.id !== deletingSession.id));
+      setIsDeleteOpen(false);
+      setDeletingSession(null);
+    } catch (err: any) {
+      console.error("Failed to delete session:", err.message);
+      showFlash("Failed to delete workout session.", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const loadHistory = async () => {
+
 
     setLoading(true);
     try {
@@ -390,6 +420,18 @@ export default function WorkoutHistoryPage() {
                         </svg>
                       </button>
 
+                      {/* Delete Session Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => startDelete(e, session)}
+                        className="p-1.5 text-text-secondary hover:text-danger hover:bg-bg border border-transparent hover:border-border-subtle rounded-xs transition-all duration-200 cursor-pointer"
+                        title="Delete Session"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+
                       {/* Expand indicator arrow */}
                       <svg
                         className={`w-4 h-4 text-text-secondary transition-transform duration-300 ${
@@ -398,6 +440,7 @@ export default function WorkoutHistoryPage() {
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
+
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                       </svg>
@@ -531,7 +574,47 @@ export default function WorkoutHistoryPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteOpen}
+        onClose={() => {
+          setIsDeleteOpen(false);
+          setDeletingSession(null);
+        }}
+        title="Confirm Deletion"
+        subtitle="RESTRICT CONSTRAINT"
+      >
+        <div className="flex flex-col gap-6">
+          <p className="text-xs text-text-secondary leading-relaxed">
+            Are you sure you want to delete <span className="text-text-primary font-bold uppercase">{deletingSession?.title}</span>? This action will permanently remove this training log entry and all associated performance metrics.
+          </p>
+
+          <div className="flex items-center justify-end gap-3 border-t border-border-subtle pt-4 mt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setIsDeleteOpen(false);
+                setDeletingSession(null);
+              }}
+              className="text-xs py-2"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDeleteSession}
+              disabled={submitting}
+              className="text-xs py-2 bg-danger hover:bg-danger/80 border-danger hover:border-danger/80 text-text-primary"
+            >
+              {submitting ? "Deleting..." : "Confirm Delete"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </main>
   );
 }
+
 

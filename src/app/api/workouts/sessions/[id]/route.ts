@@ -42,3 +42,32 @@ export async function PUT(
     return NextResponse.json({ error: message }, { status });
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const sessionId = resolvedParams.id;
+
+    const accessToken = req.cookies.get("access_token")?.value;
+    const backendUrl = process.env.BACKEND_API_URL || "http://127.0.0.1:8000";
+    const deleteEndpoint = `${backendUrl}/api/v1/workouts/session/${sessionId}`;
+
+    const headers: Record<string, string> = {};
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+
+    await axios.delete(deleteEndpoint, { headers });
+
+    return new NextResponse(null, { status: 204 });
+  } catch (err: any) {
+    console.error("Delete Workout Session Proxy Error:", err.message);
+    const status = err.response?.status || 500;
+    const message = err.response?.data?.detail || "Failed to delete workout session";
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+

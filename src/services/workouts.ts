@@ -113,6 +113,11 @@ export async function updateWorkoutSession(
   return response.data;
 }
 
+export async function deleteWorkoutSession(sessionId: string): Promise<void> {
+  await axios.delete(`/api/workouts/sessions/${sessionId}`);
+}
+
+
 
 
 
