@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { WorkoutSession } from "../../services/workouts";
 
 interface WorkoutDay {
   dayName: string;
@@ -14,83 +15,104 @@ interface WorkoutDay {
   exercises?: string[];
 }
 
-export const WeekView: React.FC = () => {
-  const mockWeekData: WorkoutDay[] = [
-    {
-      dayName: "Monday",
-      dayShort: "MON",
-      date: 15,
-      status: "completed",
-      workoutName: "Hypertrophy Push I",
-      duration: "75 mins",
-      time: "07:30 AM",
-      muscleGroups: ["Chest", "Shoulders", "Triceps"],
-      exercises: ["Flat DB Bench Press (4x8)", "Incline Smith Press (3x10)", "Lateral Raises (4x15)", "Cable Pushdowns (3x12)"],
-    },
-    {
-      dayName: "Tuesday",
-      dayShort: "TUE",
-      date: 16,
-      status: "completed",
-      workoutName: "Posterior Chain Pull I",
-      duration: "80 mins",
-      time: "08:00 AM",
-      muscleGroups: ["Back", "Biceps", "Rear Delts"],
-      exercises: ["Barbell Deadlifts (4x5)", "Weighted Pull-ups (3x8)", "Seated Cable Rows (3x12)", "Hammer Curls (4x10)"],
-    },
-    {
-      dayName: "Wednesday",
-      dayShort: "WED",
-      date: 17,
-      status: "rest",
-      workoutName: "Active Recovery & Mobility",
-      duration: "45 mins",
-      time: "09:00 AM",
-      muscleGroups: ["Mobility", "Core"],
-      exercises: ["Dynamic Stretching Flow", "Deep Squat Holds", "Plank Variations (3x60s)"],
-    },
-    {
-      dayName: "Thursday",
-      dayShort: "THU",
-      date: 18,
-      status: "scheduled",
-      workoutName: "Quad Focus Lower I",
-      duration: "90 mins",
-      time: "06:30 PM",
-      muscleGroups: ["Quads", "Hamstrings", "Calves"],
-      exercises: ["Barbell Back Squats (4x6)", "Romanian Deadlifts (3x10)", "Leg Extensions (3x15)", "Standing Calf Raises (4x12)"],
-    },
-    {
-      dayName: "Friday",
-      dayShort: "FRI",
-      date: 19,
-      status: "scheduled",
-      workoutName: "Upper Body Aesthetics",
-      duration: "70 mins",
-      time: "07:00 AM",
-      muscleGroups: ["Chest", "Back", "Arms"],
-      exercises: ["Incline DB Flyes (3x12)", "Chest-Supported Rows (3x10)", "Overhead DB Extensions (3x12)", "Incline Bicep Curls (3x12)"],
-    },
-    {
-      dayName: "Saturday",
-      dayShort: "SAT",
-      date: 20,
-      status: "rest",
-    },
-    {
-      dayName: "Sunday",
-      dayShort: "SUN",
-      date: 21,
-      status: "scheduled",
-      workoutName: "Conditioning & Zone 2 Cardio",
-      duration: "60 mins",
-      time: "08:30 AM",
-      muscleGroups: ["Cardio", "Endurance"],
-      exercises: ["Incline Rucking / Walk", "Sled Pushes (5 rounds)", "Assault Bike Intervals"],
-    },
-  ];
+interface WeekViewProps {
+  sessions: WorkoutSession[];
+}
 
-  const [selectedDay, setSelectedDay] = useState<WorkoutDay>(mockWeekData[3]); // Default select Thursday (Active Day)
+export const WeekView: React.FC<WeekViewProps> = ({ sessions }) => {
+  const [weekData, setWeekData] = useState<WorkoutDay[]>([]);
+  const [selectedDay, setSelectedDay] = useState<WorkoutDay | null>(null);
+  const [timeframeText, setTimeframeText] = useState("");
+
+  useEffect(() => {
+    // Get start of current week (Monday)
+    const today = new Date();
+    const day = today.getDay();
+    // Adjust so Monday is first day of week. If Sunday (0), go back 6 days.
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(today.setDate(diff));
+
+    // Timeframe text
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+    setTimeframeText(
+      `${monday.toLocaleDateString("en-US", options)} – ${sunday.toLocaleDateString(
+        "en-US",
+        options
+      )}, ${sunday.getFullYear()}`
+    );
+
+    const weekDays: WorkoutDay[] = [];
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayShorts = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+    for (let i = 0; i < 7; i++) {
+      const currentDate = new Date(monday);
+      currentDate.setDate(monday.getDate() + i);
+
+      // Match sessions by YYYY-MM-DD
+      const dateString = currentDate.toLocaleDateString("en-CA");
+      const matchingSession = sessions.find(
+        (s) => new Date(s.start_time).toLocaleDateString("en-CA") === dateString
+      );
+
+      const muscleGroups = matchingSession
+        ? (Array.from(
+            new Set(matchingSession.sets.map((s) => s.exercise?.target_muscle).filter(Boolean))
+          ) as string[])
+        : [];
+
+      const exercises = matchingSession
+        ? (Array.from(
+            new Set(
+              matchingSession.sets.map(
+                (s) => `${s.exercise?.name || "Exercise"} (${s.weight_kg}kg × ${s.reps} reps)`
+              )
+            )
+          ) as string[])
+        : [];
+
+      const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+
+      weekDays.push({
+        dayName: dayNames[currentDate.getDay()],
+        dayShort: dayShorts[currentDate.getDay()],
+        date: currentDate.getDate(),
+        status: matchingSession ? "completed" : isWeekend ? "rest" : "scheduled",
+        workoutName: matchingSession
+          ? matchingSession.title
+          : isWeekend
+          ? undefined
+          : "Scheduled Routine",
+        duration: matchingSession ? `${matchingSession.duration_minutes} mins` : undefined,
+        time: matchingSession
+          ? new Date(matchingSession.start_time).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : undefined,
+        muscleGroups: matchingSession ? muscleGroups : undefined,
+        exercises: matchingSession ? exercises : undefined,
+      });
+    }
+
+    // Rearrange so it starts on Monday: MON, TUE, WED, THU, FRI, SAT, SUN
+    const sortedDays = [...weekDays];
+    const sun = sortedDays.shift(); // remove Sunday from the front
+    if (sun) sortedDays.push(sun); // append Sunday to the back
+
+    setWeekData(sortedDays);
+
+    // Default select today's day if possible, or Monday
+    const todayDate = new Date().getDate();
+    const todayDayObj = sortedDays.find((d) => d.date === todayDate) || sortedDays[0];
+    setSelectedDay(todayDayObj);
+  }, [sessions]);
+
+  if (weekData.length === 0 || !selectedDay) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -101,19 +123,25 @@ export const WeekView: React.FC = () => {
             Weekly Schedule
           </h3>
           <span className="text-[10px] text-text-secondary tracking-widest uppercase font-mono">
-            June 15 – June 21, 2026
+            {timeframeText}
           </span>
         </div>
         <div className="flex items-center gap-4 text-[10px] tracking-widest text-text-muted uppercase font-mono">
-          <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-success" /> Done</span>
-          <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full border border-accent" /> Sched</span>
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-0.5 bg-border-strong" /> Rest</span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-success" /> Done
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full border border-accent" /> Sched
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-0.5 bg-border-strong" /> Rest
+          </span>
         </div>
       </div>
 
       {/* Week Grid */}
       <div className="grid grid-cols-7 gap-2">
-        {mockWeekData.map((day) => {
+        {weekData.map((day) => {
           const isSelected = selectedDay.date === day.date;
           return (
             <button
@@ -128,10 +156,14 @@ export const WeekView: React.FC = () => {
               <span className="text-[9px] font-bold tracking-wider text-text-secondary">
                 {day.dayShort}
               </span>
-              <span className={`font-display text-2xl leading-none ${isSelected ? "text-text-accent" : "text-text-primary"}`}>
+              <span
+                className={`font-display text-2xl leading-none ${
+                  isSelected ? "text-text-accent" : "text-text-primary"
+                }`}
+              >
                 {day.date}
               </span>
-              
+
               {/* Day Status Indicator */}
               <span className="mt-1 flex items-center justify-center h-2.5">
                 {day.status === "completed" && (
@@ -140,9 +172,7 @@ export const WeekView: React.FC = () => {
                 {day.status === "scheduled" && (
                   <span className="w-1.5 h-1.5 rounded-full border border-accent" />
                 )}
-                {day.status === "rest" && (
-                  <span className="w-2.5 h-0.5 bg-border-strong" />
-                )}
+                {day.status === "rest" && <span className="w-2.5 h-0.5 bg-border-strong" />}
               </span>
             </button>
           );
@@ -163,37 +193,52 @@ export const WeekView: React.FC = () => {
                 </h4>
               </div>
               <div className="flex items-center gap-4 text-[11px] font-mono text-text-secondary">
-                <span className="flex items-center gap-1.5">⏱ {selectedDay.duration}</span>
-                <span className="flex items-center gap-1.5">🔔 {selectedDay.time}</span>
+                {selectedDay.duration && (
+                  <span className="flex items-center gap-1.5">⏱ {selectedDay.duration}</span>
+                )}
+                {selectedDay.time && (
+                  <span className="flex items-center gap-1.5">🔔 {selectedDay.time}</span>
+                )}
               </div>
             </div>
 
             {/* Muscle groups targeted */}
-            <div className="flex flex-wrap gap-2">
-              {selectedDay.muscleGroups?.map((group) => (
-                <span key={group} className="px-2.5 py-0.5 bg-surface border border-border-subtle text-[8px] font-bold tracking-wider text-text-secondary uppercase rounded-xs">
-                  {group}
-                </span>
-              ))}
-            </div>
+            {selectedDay.muscleGroups && selectedDay.muscleGroups.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedDay.muscleGroups.map((group) => (
+                  <span
+                    key={group}
+                    className="px-2.5 py-0.5 bg-surface border border-border-subtle text-[8px] font-bold tracking-wider text-text-secondary uppercase rounded-xs"
+                  >
+                    {group}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Exercises lineup */}
-            <div className="flex flex-col gap-2 mt-2">
-              <span className="text-[9px] font-bold tracking-widest text-text-muted uppercase">
-                PERFORMANCE SETS
-              </span>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {selectedDay.exercises?.map((exercise, idx) => (
-                  <li
-                    key={idx}
-                    className="flex items-center gap-3 p-3 bg-surface border border-border-subtle rounded-xs text-xs text-text-primary hover:border-accent-muted transition-colors duration-200"
-                  >
-                    <span className="font-mono text-[10px] text-accent">0{idx + 1}</span>
-                    <span className="font-sans text-text-secondary">{exercise}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {selectedDay.exercises && selectedDay.exercises.length > 0 ? (
+              <div className="flex flex-col gap-2 mt-2">
+                <span className="text-[9px] font-bold tracking-widest text-text-muted uppercase">
+                  PERFORMANCE SETS
+                </span>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {selectedDay.exercises.map((exercise, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-center gap-3 p-3 bg-surface border border-border-subtle rounded-xs text-xs text-text-primary hover:border-accent-muted transition-colors duration-200"
+                    >
+                      <span className="font-mono text-[10px] text-accent">
+                        {(idx + 1).toString().padStart(2, "0")}
+                      </span>
+                      <span className="font-sans text-text-secondary">{exercise}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-xs text-text-muted italic">No specific sets recorded.</p>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-center">
