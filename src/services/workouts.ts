@@ -99,6 +99,21 @@ export async function recordWorkoutSession(payload: RecordWorkoutSessionParams):
   return response.data;
 }
 
+export async function updateWorkoutSession(
+  sessionId: string,
+  title: string,
+  durationMinutes: number
+): Promise<WorkoutSession> {
+  const response = await axios.put<WorkoutSession>(`/api/workouts/sessions/${sessionId}`, null, {
+    params: {
+      title,
+      duration_minutes: durationMinutes,
+    },
+  });
+  return response.data;
+}
+
+
 
 
 
