@@ -59,7 +59,7 @@ export const WeekView: React.FC<WeekViewProps> = ({ sessions }) => {
 
       const muscleGroups = matchingSession
         ? (Array.from(
-            new Set(matchingSession.sets.map((s) => s.exercise?.target_muscle).filter(Boolean))
+            new Set(matchingSession.sets.map((s) => s.exercise?.target_muscle || s.target_muscle).filter(Boolean))
           ) as string[])
         : [];
 
@@ -67,7 +67,7 @@ export const WeekView: React.FC<WeekViewProps> = ({ sessions }) => {
         ? (Array.from(
             new Set(
               matchingSession.sets.map(
-                (s) => `${s.exercise?.name || "Exercise"} (${s.weight_kg}kg × ${s.reps} reps)`
+                (s) => `${s.exercise?.name || s.exercise_name || "Exercise"} (${s.weight_kg}kg × ${s.reps} reps)`
               )
             )
           ) as string[])

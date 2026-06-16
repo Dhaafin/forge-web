@@ -49,6 +49,8 @@ export interface WorkoutSet {
   is_pr: boolean;
   set_type?: string;
   exercise?: Exercise;
+  exercise_name?: string;
+  target_muscle?: string;
 }
 
 export interface WorkoutSession {

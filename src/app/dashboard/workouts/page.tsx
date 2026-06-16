@@ -396,7 +396,7 @@ export default function WorkoutHistoryPage() {
               
               // Extract distinct muscles worked
               const muscles = Array.from(
-                new Set(session.sets.map((set) => set.exercise?.target_muscle).filter(Boolean))
+                new Set(session.sets.map((set) => set.exercise?.target_muscle || (set as any).target_muscle).filter(Boolean))
               );
 
               return (
@@ -522,10 +522,10 @@ export default function WorkoutHistoryPage() {
                                       {(idx + 1).toString().padStart(2, "0")}
                                     </span>
                                     <span className="font-semibold text-text-primary uppercase tracking-tight">
-                                      {set.exercise?.name || "Exercise Record"}
+                                      {set.exercise?.name || set.exercise_name || "Exercise Record"}
                                     </span>
                                     <span className="text-[9px] bg-surface-raised border border-border-strong px-2 py-0.5 text-text-secondary font-mono uppercase tracking-wider rounded-xs">
-                                      {set.exercise?.target_muscle}
+                                      {set.exercise?.target_muscle || set.target_muscle || "General"}
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-4">
@@ -657,7 +657,7 @@ export default function WorkoutHistoryPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] text-text-accent font-semibold uppercase font-mono">
-                        {set.exercise?.name || "Exercise Record"} ({set.exercise?.target_muscle})
+                        {set.exercise?.name || set.exercise_name || "Exercise Record"} ({set.exercise?.target_muscle || set.target_muscle || "General"})
                       </span>
                       <button
                         type="button"
