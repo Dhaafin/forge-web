@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "motion/react";
 import { Input } from "../../../../components/atoms/Input";
 import { Button } from "../../../../components/atoms/Button";
 import { Dropdown } from "../../../../components/molecules/Dropdown";
@@ -14,11 +15,13 @@ interface SessionExercise {
   name: string;
   target_muscle: string;
   sets: {
+    id: string;
     weight: number;
     reps: number;
     type: "normal" | "warmup" | "drop" | "failure";
   }[];
 }
+
 
 export default function RecordWorkoutPage() {
   const router = useRouter();
@@ -148,7 +151,7 @@ export default function RecordWorkoutPage() {
       exerciseId: selected.id,
       name: selected.name,
       target_muscle: selected.target_muscle,
-      sets: [{ weight: 60, reps: 10, type: "normal" }], // start with 1 default set
+      sets: [{ id: `set-${Date.now()}-${Math.random()}`, weight: 60, reps: 10, type: "normal" }], // start with 1 default set
     };
 
     setSessionExercises((prev) => [...prev, newExercise]);
@@ -165,11 +168,12 @@ export default function RecordWorkoutPage() {
         const lastSet = se.sets[se.sets.length - 1] || { weight: 60, reps: 10, type: "normal" };
         return {
           ...se,
-          sets: [...se.sets, { ...lastSet }],
+          sets: [...se.sets, { ...lastSet, id: `set-${Date.now()}-${Math.random()}` }],
         };
       })
     );
   };
+
 
   const removeSetFromExercise = (exerciseId: string, setIndex: number) => {
     setSessionExercises((prev) =>
@@ -426,137 +430,158 @@ export default function RecordWorkoutPage() {
 
         {/* Exercises List Builder */}
         <section className="flex flex-col gap-6">
-          {sessionExercises.length > 0 ? (
-            sessionExercises.map((se) => (
-
-              <div
-                key={se.exerciseId}
-                className="bg-surface border border-border-subtle rounded-md flex flex-col relative"
-              >
-                {/* Header */}
-                <div className="px-5 py-4 border-b border-border-subtle/50 bg-bg/20 flex items-center justify-between rounded-t-md">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[9px] bg-bg border border-accent/20 px-2 py-0.5 text-text-accent font-mono uppercase tracking-wider rounded-xs font-semibold">
-                      {se.target_muscle}
-                    </span>
-                    <h4 className="text-sm font-bold text-text-primary uppercase tracking-tight">
-                      {se.name}
-                    </h4>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeExerciseFromSession(se.exerciseId)}
-                    className="text-[10px] font-bold tracking-wider text-text-secondary hover:text-danger uppercase font-mono cursor-pointer transition-colors"
-                  >
-                    Remove Exercise
-                  </button>
-                </div>
-
-                {/* Sets details body */}
-                <div className="p-5 flex flex-col gap-3">
-                  {se.sets.length > 0 && (
-                    <div className="grid grid-cols-12 gap-3 items-center mb-1">
-                      <span className="col-span-1 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono text-center">
-                        Set
+          <AnimatePresence initial={false}>
+            {sessionExercises.length > 0 ? (
+              sessionExercises.map((se) => (
+                <motion.div
+                  key={se.exerciseId}
+                  layout
+                  initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -15, scale: 0.98 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="bg-surface border border-border-subtle rounded-md flex flex-col relative"
+                >
+                  {/* Header */}
+                  <div className="px-5 py-4 border-b border-border-subtle/50 bg-bg/20 flex items-center justify-between rounded-t-md">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[9px] bg-bg border border-accent/20 px-2 py-0.5 text-text-accent font-mono uppercase tracking-wider rounded-xs font-semibold">
+                        {se.target_muscle}
                       </span>
-                      <span className="col-span-3 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
-                        Weight (kg)
-                      </span>
-                      <span className="col-span-3 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
-                        Reps
-                      </span>
-                      <span className="col-span-4 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
-                        Set Type
-                      </span>
-                      <span className="col-span-1"></span>
+                      <h4 className="text-sm font-bold text-text-primary uppercase tracking-tight">
+                        {se.name}
+                      </h4>
                     </div>
-                  )}
-
-                  {se.sets.map((set, idx) => (
-                    <div
-                      key={idx}
-                      className="grid grid-cols-12 gap-3 items-center"
-                    >
-                      <span className="col-span-1 text-xs font-semibold font-mono text-text-secondary text-center">
-                        {(idx + 1).toString().padStart(2, "0")}
-                      </span>
-
-                      {/* Weight */}
-                      <div className="col-span-3">
-                        <input
-                          type="number"
-                          value={set.weight}
-                          onChange={(e) => updateSetField(se.exerciseId, idx, "weight", Number(e.target.value))}
-                          placeholder="Weight (kg)"
-                          className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
-                          required
-                          min={0}
-                        />
-                      </div>
-
-                      {/* Reps */}
-                      <div className="col-span-3">
-                        <input
-                          type="number"
-                          value={set.reps}
-                          onChange={(e) => updateSetField(se.exerciseId, idx, "reps", Number(e.target.value))}
-                          placeholder="Reps"
-                          className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
-                          required
-                          min={0}
-                        />
-                      </div>
-
-                      {/* Set Type Dropdown */}
-                      <div className="col-span-4">
-                        <Dropdown
-                          options={setTypeOptions}
-                          selectedValue={set.type}
-                          onChange={(val) => updateSetField(se.exerciseId, idx, "type", val as any)}
-                          maxHeight="160px"
-                        />
-                      </div>
-
-                      {/* Remove Set Button */}
-                      <div className="col-span-1 flex justify-center">
-                        <button
-                          type="button"
-                          onClick={() => removeSetFromExercise(se.exerciseId, idx)}
-                          className="p-1.5 text-text-secondary hover:text-danger rounded-xs transition-colors cursor-pointer"
-                          title="Delete Set"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="flex justify-end mt-2">
-                    <Button
+                    <button
                       type="button"
-                      variant="secondary"
-                      onClick={() => addSetToExercise(se.exerciseId)}
-                      className="text-[10px] py-1.5 px-4"
+                      onClick={() => removeExerciseFromSession(se.exerciseId)}
+                      className="text-[10px] font-bold tracking-wider text-text-secondary hover:text-danger uppercase font-mono cursor-pointer transition-colors"
                     >
-                      + Add Set
-                    </Button>
+                      Remove Exercise
+                    </button>
                   </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 border border-dashed border-border-subtle rounded-md bg-surface/10">
-              <span className="text-xl mb-2">🏋️</span>
-              <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">
-                No Exercises Logged Yet
-              </h4>
-              <p className="text-xs text-text-muted mt-1 uppercase tracking-wider font-mono">
-                Select an exercise above to begin tracking.
-              </p>
-            </div>
-          )}
+
+                  {/* Sets details body */}
+                  <div className="p-5 flex flex-col gap-3">
+                    {se.sets.length > 0 && (
+                      <div className="grid grid-cols-12 gap-3 items-center mb-1">
+                        <span className="col-span-1 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono text-center">
+                          Set
+                        </span>
+                        <span className="col-span-3 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
+                          Weight (kg)
+                        </span>
+                        <span className="col-span-3 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
+                          Reps
+                        </span>
+                        <span className="col-span-4 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono pl-1">
+                          Set Type
+                        </span>
+                        <span className="col-span-1"></span>
+                      </div>
+                    )}
+
+                    <AnimatePresence initial={false}>
+                      {se.sets.map((set, idx) => (
+                        <motion.div
+                          key={set.id}
+                          layout
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          className="overflow-hidden"
+                        >
+                          <div className="grid grid-cols-12 gap-3 items-center py-1.5">
+                            <span className="col-span-1 text-xs font-semibold font-mono text-text-secondary text-center">
+                              {(idx + 1).toString().padStart(2, "0")}
+                            </span>
+
+                            {/* Weight */}
+                            <div className="col-span-3">
+                              <input
+                                type="number"
+                                value={set.weight}
+                                onChange={(e) => updateSetField(se.exerciseId, idx, "weight", Number(e.target.value))}
+                                placeholder="Weight (kg)"
+                                className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
+                                required
+                                min={0}
+                              />
+                            </div>
+
+                            {/* Reps */}
+                            <div className="col-span-3">
+                              <input
+                                type="number"
+                                value={set.reps}
+                                onChange={(e) => updateSetField(se.exerciseId, idx, "reps", Number(e.target.value))}
+                                placeholder="Reps"
+                                className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
+                                required
+                                min={0}
+                              />
+                            </div>
+
+                            {/* Set Type Dropdown */}
+                            <div className="col-span-4">
+                              <Dropdown
+                                options={setTypeOptions}
+                                selectedValue={set.type}
+                                onChange={(val) => updateSetField(se.exerciseId, idx, "type", val as any)}
+                                maxHeight="160px"
+                              />
+                            </div>
+
+                            {/* Remove Set Button */}
+                            <div className="col-span-1 flex justify-center">
+                              <button
+                                type="button"
+                                onClick={() => removeSetFromExercise(se.exerciseId, idx)}
+                                className="p-1.5 text-text-secondary hover:text-danger rounded-xs transition-colors cursor-pointer"
+                                title="Delete Set"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+
+                    <div className="flex justify-end mt-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => addSetToExercise(se.exerciseId)}
+                        className="text-[10px] py-1.5 px-4"
+                      >
+                        + Add Set
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center justify-center py-16 border border-dashed border-border-subtle rounded-md bg-surface/10"
+              >
+                <span className="text-xl mb-2">🏋️</span>
+                <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">
+                  No Exercises Logged Yet
+                </h4>
+                <p className="text-xs text-text-muted mt-1 uppercase tracking-wider font-mono">
+                  Select an exercise above to begin tracking.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
         </section>
 
         {/* Submit Bar */}
