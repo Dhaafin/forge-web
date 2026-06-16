@@ -117,6 +117,25 @@ export async function deleteWorkoutSession(sessionId: string): Promise<void> {
   await axios.delete(`/api/workouts/sessions/${sessionId}`);
 }
 
+export interface WorkoutAiAnalysis {
+  id: string;
+  user_id: string;
+  session_id: string;
+  prompt: string;
+  response: string;
+  model_used: string;
+  tokens_prompt: number;
+  tokens_completion: number;
+  created_at: string;
+}
+
+export async function getWorkoutAiAnalysis(sessionId: string): Promise<WorkoutAiAnalysis> {
+  const response = await axios.post<WorkoutAiAnalysis>("/api/ai/coach", {
+    session_id: sessionId,
+  });
+  return response.data;
+}
+
 
 
 
