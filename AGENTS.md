@@ -68,6 +68,17 @@ forge-web/
 - **Spinner (`src/components/atoms/Spinner.tsx`)**: Reusable animated loading spinner indicator styled to match the champagne dark theme.
   - *Props*: `size` (`"sm"` | `"md"` | `"lg"`, defaults to `"md"`), `className` (optional string).
   - *Conventions*: Always use this component inside buttons or layout panels to provide visual indicators for asynchronous requests or loading states.
+- **ExerciseCard (`src/components/molecules/exercises/ExerciseCard.tsx`)**: Premium display card molecule for a single exercise list item.
+  - *Props*: `exercise` (`Exercise`), `onEdit` (`(ex: Exercise) => void`), `onDelete` (`(ex: Exercise) => void`).
+- **NotesParserPanel (`src/components/molecules/workouts/NotesParserPanel.tsx`)**: Intelligent parsing card molecule combining user history text snippets, AI parse status, and game-style progress loaders.
+  - *Props*: `onParsed` (`(sets: WorkoutSet[]) => void`), `onNotesApplied` (`(notesText: string) => void`).
+- **ExercisesManager (`src/components/organisms/exercises/ExercisesManager.tsx`)**: Dynamic catalog orchestrator organism containing filters, live search, and modal states for creation, update, and deletions.
+  - *Props*: None (self-contained state & service bindings).
+- **WorkoutSessionBuilder (`src/components/organisms/workouts/WorkoutSessionBuilder.tsx`)**: Comprehensive workout logger organism handling dual-mode inputs (live timer vs past calendar/time pickers), sets records list, muscle mappings, and note parser integration.
+  - *Props*: None.
+- **WorkoutHistoryList (`src/components/organisms/workouts/WorkoutHistoryList.tsx`)**: Workout archives display organism managing history lists, sort presets, dynamic detail expanders, inline sets editor modals, and AI coach report queries.
+  - *Props*: None.
+
 
 ## Agent Best Practices
 
