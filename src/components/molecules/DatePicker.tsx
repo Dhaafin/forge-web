@@ -133,9 +133,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full px-4 py-3 bg-bg border border-border-subtle hover:border-accent-muted text-text-primary text-sm rounded-sm transition-all duration-200 outline-none text-left select-none cursor-pointer"
+        className="flex items-center justify-between w-full px-4 py-3 bg-bg border border-border-subtle hover:border-accent-muted text-text-primary text-sm rounded-sm transition-all duration-200 outline-none text-left select-none cursor-pointer whitespace-nowrap overflow-hidden min-w-0"
       >
-        <span>{formatDateDisplay(value)}</span>
+        <span className="truncate mr-2">{formatDateDisplay(value)}</span>
         <svg
           className={`w-3.5 h-3.5 text-text-secondary transition-transform duration-300 ${
             isOpen ? "rotate-180 text-text-accent" : ""
