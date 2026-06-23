@@ -7,6 +7,7 @@ import { Input } from "../../../components/atoms/Input";
 import { Button } from "../../../components/atoms/Button";
 import { Badge } from "../../../components/atoms/Badge";
 import { Skeleton } from "../../../components/atoms/Skeleton";
+import { Spinner } from "../../../components/atoms/Spinner";
 import { Dropdown } from "../../../components/molecules/Dropdown";
 import { Modal } from "../../../components/molecules/Modal";
 
@@ -471,8 +472,15 @@ export default function ExercisesPage() {
             <Button type="button" variant="secondary" onClick={() => setIsCreateOpen(false)} className="text-xs py-2">
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting} className="text-xs py-2">
-              {submitting ? "Forging..." : "Forge Exercise"}
+            <Button type="submit" disabled={submitting} className="text-xs py-2 min-w-[110px] flex items-center justify-center gap-2">
+              {submitting ? (
+                <>
+                  <Spinner size="sm" />
+                  <span>Forging...</span>
+                </>
+              ) : (
+                "Forge Exercise"
+              )}
             </Button>
           </div>
         </form>
@@ -519,8 +527,15 @@ export default function ExercisesPage() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting} className="text-xs py-2">
-              {submitting ? "Saving..." : "Save Changes"}
+            <Button type="submit" disabled={submitting} className="text-xs py-2 min-w-[110px] flex items-center justify-center gap-2">
+              {submitting ? (
+                <>
+                  <Spinner size="sm" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                "Save Changes"
+              )}
             </Button>
           </div>
         </form>
@@ -557,9 +572,16 @@ export default function ExercisesPage() {
               type="button"
               onClick={handleDeleteExercise}
               disabled={submitting}
-              className="text-xs py-2 bg-danger hover:bg-danger/80 border-danger hover:border-danger/80 text-text-primary"
+              className="text-xs py-2 bg-danger hover:bg-danger/80 border-danger hover:border-danger/80 text-text-primary min-w-[125px] flex items-center justify-center gap-2"
             >
-              {submitting ? "Deleting..." : "Confirm Delete"}
+              {submitting ? (
+                <>
+                  <Spinner size="sm" />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                "Confirm Delete"
+              )}
             </Button>
           </div>
         </div>
