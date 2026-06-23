@@ -68,7 +68,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   return (
     <div ref={containerRef} className={`flex flex-col gap-2 relative w-full ${className}`}>
       {label && (
-        <span className="text-[10px] font-bold tracking-widest text-text-secondary uppercase font-mono">
+        <span className="text-xs font-semibold tracking-wider text-text-secondary uppercase">
           {label}
         </span>
       )}
@@ -77,7 +77,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full px-4 py-3 bg-bg border border-border-subtle hover:border-accent-muted text-text-primary text-xs rounded-sm transition-all duration-200 outline-none text-left select-none cursor-pointer"
+        className="flex items-center justify-between w-full px-4 py-3 bg-bg border border-border-subtle hover:border-accent-muted text-text-primary text-sm rounded-sm transition-all duration-200 outline-none text-left select-none cursor-pointer"
       >
         <span>{`${displayHour.toString().padStart(2, "0")}:${displayMinute} ${displayPeriod}`}</span>
         <svg
