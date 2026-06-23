@@ -50,6 +50,7 @@ export default function RecordWorkoutPage() {
   // AI Notes parsing states
   const [rawNotesText, setRawNotesText] = useState("");
   const [isParsing, setIsParsing] = useState(false);
+  const [parseProgress, setParseProgress] = useState(0);
   const [notesHistory, setNotesHistory] = useState<string[]>([]);
 
   // Past Mode specific states
@@ -256,9 +257,25 @@ export default function RecordWorkoutPage() {
     }
 
     setIsParsing(true);
+    setParseProgress(0);
+
+    const progressInterval = setInterval(() => {
+      setParseProgress((prev) => {
+        if (prev >= 95) return prev;
+        const remaining = 95 - prev;
+        const step = Math.max(1, Math.round(remaining * 0.12));
+        return prev + step;
+      });
+    }, 200);
+
     try {
       const parsed = await parseWorkoutNotes(rawNotesText);
       
+      clearInterval(progressInterval);
+      setParseProgress(100);
+      // Wait briefly so user sees the 100% complete bar
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
       if (parsed.title) {
         setTitle(parsed.title);
       }
@@ -268,7 +285,7 @@ export default function RecordWorkoutPage() {
       }
 
       // Map parsed exercises to sessionExercises structure
-      const mapped: SessionExercise[] = parsed.exercises.map((pEx) => {
+      const mapped: SessionExercise[] = parsed.exercises.map((pEx, idx) => {
         let resolvedId = "";
         let resolvedName = pEx.raw_name;
         let resolvedMuscle = pEx.inferred_target_muscle || "Unknown";
@@ -287,6 +304,9 @@ export default function RecordWorkoutPage() {
             resolvedId = match.id;
             resolvedName = match.name;
             resolvedMuscle = match.target_muscle;
+          } else {
+            // Assign a unique temporary ID so we can re-associate it uniquely
+            resolvedId = `unmatched-${Date.now()}-${idx}-${Math.random()}`;
           }
         }
 
@@ -294,8 +314,8 @@ export default function RecordWorkoutPage() {
           exerciseId: resolvedId,
           name: resolvedName,
           target_muscle: resolvedMuscle,
-          sets: pEx.sets.map((s, idx) => ({
-            id: `set-${Date.now()}-${idx}-${Math.random()}`,
+          sets: pEx.sets.map((s, sIdx) => ({
+            id: `set-${Date.now()}-${idx}-${sIdx}-${Math.random()}`,
             weight: s.weight_kg,
             reps: s.reps,
             type: s.set_type || "normal",
@@ -312,10 +332,12 @@ export default function RecordWorkoutPage() {
       setNotesHistory(updatedHistory);
       localStorage.setItem("forge_parsed_notes_history", JSON.stringify(updatedHistory));
     } catch (err: any) {
+      clearInterval(progressInterval);
       console.error("Notes parsing failed:", err.message);
       showFlash(err.response?.data?.error || "Failed to parse notes. Please check note format.", "error");
     } finally {
       setIsParsing(false);
+      setParseProgress(0);
     }
   };
 
@@ -539,44 +561,76 @@ export default function RecordWorkoutPage() {
               </div>
 
               <div className="flex flex-col gap-3">
-                <textarea
-                  value={rawNotesText}
-                  onChange={(e) => setRawNotesText(e.target.value)}
-                  placeholder="Paste notes here: e.g. 08/05/26 Pull Day. Exercises - Machine Row 40kg 12 10 10"
-                  className="w-full h-24 p-3 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none resize-none font-mono placeholder:text-text-muted transition-colors duration-200"
-                />
-
-                {notesHistory.length > 0 && (
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-[9px] font-bold text-text-muted uppercase tracking-wider font-mono">
-                      Recent Notes History (Click to load shortcut)
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {notesHistory.map((item, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setRawNotesText(item)}
-                          className="text-[10px] font-mono bg-bg/50 border border-border-subtle hover:border-accent/40 text-text-secondary hover:text-accent px-2 py-1 rounded-xs transition-all max-w-[200px] truncate cursor-pointer"
-                          title={item}
-                        >
-                          {item.slice(0, 35)}...
-                        </button>
-                      ))}
+                {isParsing ? (
+                  <div className="bg-bg/40 border border-border-subtle p-5 rounded-sm flex flex-col gap-4 relative overflow-hidden">
+                    {/* Glowing progress line */}
+                    <div className="flex justify-between items-center text-[10px] font-mono font-bold tracking-widest text-accent">
+                      <span className="animate-pulse">
+                        {parseProgress < 20 && "CONNECTING TO FORGE AI ENGINE..."}
+                        {parseProgress >= 20 && parseProgress < 45 && "DECONSTRUCTING RAW NOTES DATA..."}
+                        {parseProgress >= 45 && parseProgress < 70 && "FUZZY-MATCHING EXERCISES WITH DB..."}
+                        {parseProgress >= 70 && parseProgress < 90 && "PARSING REPS, WEIGHT, AND SETS..."}
+                        {parseProgress >= 90 && parseProgress < 100 && "FORGING WORKOUT SESSION MODEL..."}
+                        {parseProgress === 100 && "COMPILING SUCCESSFUL GAINS! LOADED."}
+                      </span>
+                      <span>{parseProgress}%</span>
                     </div>
-                  </div>
-                )}
 
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    onClick={handleParseNotes}
-                    disabled={isParsing}
-                    className="text-xs py-2 px-6 h-[38px] cursor-pointer"
-                  >
-                    {isParsing ? "Parsing Notes..." : "✨ Parse & Populate Session"}
-                  </Button>
-                </div>
+                    <div className="w-full h-2.5 bg-surface border border-border-subtle p-0.5 rounded-full overflow-hidden relative">
+                      <motion.div
+                        className="h-full bg-accent rounded-full shadow-accent relative"
+                        initial={{ width: "0%" }}
+                        animate={{ width: `${parseProgress}%` }}
+                        transition={{ ease: "easeOut", duration: 0.15 }}
+                      />
+                    </div>
+
+                    <span className="text-[9px] font-mono tracking-widest text-text-muted uppercase text-center mt-1">
+                      System Intent: "Forged, not born."
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <textarea
+                      value={rawNotesText}
+                      onChange={(e) => setRawNotesText(e.target.value)}
+                      placeholder="Paste notes here: e.g. 08/05/26 Pull Day. Exercises - Machine Row 40kg 12 10 10"
+                      className="w-full h-24 p-3 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none resize-none font-mono placeholder:text-text-muted transition-colors duration-200"
+                    />
+
+                    {notesHistory.length > 0 && (
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[9px] font-bold text-text-muted uppercase tracking-wider font-mono">
+                          Recent Notes History (Click to load shortcut)
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {notesHistory.map((item, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => setRawNotesText(item)}
+                              className="text-[10px] font-mono bg-bg/50 border border-border-subtle hover:border-accent/40 text-text-secondary hover:text-accent px-2 py-1 rounded-xs transition-all max-w-[200px] truncate cursor-pointer"
+                              title={item}
+                            >
+                              {item.slice(0, 35)}...
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        onClick={handleParseNotes}
+                        disabled={isParsing}
+                        className="text-xs py-2 px-6 h-[38px] cursor-pointer"
+                      >
+                        ✨ Parse & Populate Session
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             </section>
 
