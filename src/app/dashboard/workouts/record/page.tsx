@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Input } from "../../../../components/atoms/Input";
 import { Button } from "../../../../components/atoms/Button";
 import { Skeleton } from "../../../../components/atoms/Skeleton";
+import { Spinner } from "../../../../components/atoms/Spinner";
 import { Dropdown } from "../../../../components/molecules/Dropdown";
 import { DatePicker } from "../../../../components/molecules/DatePicker";
 import { TimePicker } from "../../../../components/molecules/TimePicker";
@@ -888,8 +889,15 @@ export default function RecordWorkoutPage() {
                     Cancel
                   </Button>
                 </Link>
-                <Button type="submit" disabled={submitting} className="text-xs py-2 px-8">
-                  {submitting ? "Saving Session..." : "Finish & Record Session"}
+                <Button type="submit" disabled={submitting} className="text-xs py-2 px-8 min-w-[170px] flex items-center justify-center gap-2">
+                  {submitting ? (
+                    <>
+                      <Spinner size="sm" />
+                      <span>Saving Session...</span>
+                    </>
+                  ) : (
+                    "Finish & Record Session"
+                  )}
                 </Button>
               </div>
             </form>
