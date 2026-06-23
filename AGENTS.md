@@ -65,6 +65,9 @@ forge-web/
   - *Props*: `message` (string), `type` (`success` | `error` | `warning` | `info`), `isVisible` (boolean), `onClose` (`() => void`), `duration` (optional number in ms).
 - **Modal (`src/components/molecules/Modal.tsx`)**: Sleek pop-up dialog modal panel animated with Framer Motion entry/exit transitions.
   - *Props*: `isOpen` (boolean), `onClose` (`() => void`), `title` (optional string), `subtitle` (optional string), `children` (`ReactNode`).
+- **Spinner (`src/components/atoms/Spinner.tsx`)**: Reusable animated loading spinner indicator styled to match the champagne dark theme.
+  - *Props*: `size` (`"sm"` | `"md"` | `"lg"`, defaults to `"md"`), `className` (optional string).
+  - *Conventions*: Always use this component inside buttons or layout panels to provide visual indicators for asynchronous requests or loading states.
 
 ## Agent Best Practices
 
