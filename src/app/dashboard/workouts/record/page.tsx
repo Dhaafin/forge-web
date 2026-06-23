@@ -10,7 +10,7 @@ import { Skeleton } from "../../../../components/atoms/Skeleton";
 import { Dropdown } from "../../../../components/molecules/Dropdown";
 import { DatePicker } from "../../../../components/molecules/DatePicker";
 import { TimePicker } from "../../../../components/molecules/TimePicker";
-import { fetchExercises, recordWorkoutSession, Exercise, RecordSessionSetParams } from "../../../../services/workouts";
+import { fetchExercises, recordWorkoutSession, parseWorkoutNotes, Exercise, RecordSessionSetParams } from "../../../../services/workouts";
 import { useFlash } from "../../../../contexts/FlashContext";
 
 
@@ -46,6 +46,11 @@ export default function RecordWorkoutPage() {
   const [selectedExerciseId, setSelectedExerciseId] = useState("");
   const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // AI Notes parsing states
+  const [rawNotesText, setRawNotesText] = useState("");
+  const [isParsing, setIsParsing] = useState(false);
+  const [notesHistory, setNotesHistory] = useState<string[]>([]);
 
   // Past Mode specific states
   const [pastDate, setPastDate] = useState("");
@@ -120,6 +125,16 @@ export default function RecordWorkoutPage() {
     setPastDate(todayStr);
     const currTime = new Date().toTimeString().slice(0, 5);
     setPastTime(currTime);
+
+    // Load raw notes history from localStorage
+    try {
+      const stored = localStorage.getItem("forge_parsed_notes_history");
+      if (stored) {
+        setNotesHistory(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.warn("Could not load parsed notes history from localStorage", e);
+    }
   }, []);
 
   // Timer controls for live workout
@@ -216,6 +231,94 @@ export default function RecordWorkoutPage() {
     );
   };
 
+  const updateExerciseAssociation = (oldId: string, newId: string) => {
+    const selected = exerciseOptions.find((ex) => ex.id === newId);
+    if (!selected) return;
+    setSessionExercises((prev) =>
+      prev.map((se) => {
+        if (se.exerciseId === oldId) {
+          return {
+            ...se,
+            exerciseId: selected.id,
+            name: selected.name,
+            target_muscle: selected.target_muscle,
+          };
+        }
+        return se;
+      })
+    );
+  };
+
+  const handleParseNotes = async () => {
+    if (!rawNotesText.trim()) {
+      showFlash("Please enter some workout notes to parse.", "warning");
+      return;
+    }
+
+    setIsParsing(true);
+    try {
+      const parsed = await parseWorkoutNotes(rawNotesText);
+      
+      if (parsed.title) {
+        setTitle(parsed.title);
+      }
+      if (parsed.date) {
+        setPastDate(parsed.date);
+        setMode("past"); // Automatically switch to past mode for retro-active log
+      }
+
+      // Map parsed exercises to sessionExercises structure
+      const mapped: SessionExercise[] = parsed.exercises.map((pEx) => {
+        let resolvedId = "";
+        let resolvedName = pEx.raw_name;
+        let resolvedMuscle = pEx.inferred_target_muscle || "Unknown";
+
+        if (pEx.matched && pEx.exercise_id) {
+          resolvedId = pEx.exercise_id;
+          resolvedName = pEx.exercise_name || pEx.raw_name;
+        } else if (pEx.suggested_exercise && pEx.suggested_exercise.id) {
+          resolvedId = pEx.suggested_exercise.id;
+          resolvedName = pEx.suggested_exercise.name;
+          resolvedMuscle = pEx.suggested_exercise.target_muscle;
+        } else {
+          // Attempt simple search in exerciseOptions
+          const match = exerciseOptions.find((o) => o.name.toLowerCase() === pEx.raw_name.toLowerCase());
+          if (match) {
+            resolvedId = match.id;
+            resolvedName = match.name;
+            resolvedMuscle = match.target_muscle;
+          }
+        }
+
+        return {
+          exerciseId: resolvedId,
+          name: resolvedName,
+          target_muscle: resolvedMuscle,
+          sets: pEx.sets.map((s, idx) => ({
+            id: `set-${Date.now()}-${idx}-${Math.random()}`,
+            weight: s.weight_kg,
+            reps: s.reps,
+            type: s.set_type || "normal",
+          })),
+        };
+      });
+
+      setSessionExercises(mapped);
+      showFlash("Workout notes parsed and loaded successfully!", "success");
+
+      // Update history in state and localStorage
+      const text = rawNotesText.trim();
+      const updatedHistory = [text, ...notesHistory.filter((item) => item !== text)].slice(0, 5);
+      setNotesHistory(updatedHistory);
+      localStorage.setItem("forge_parsed_notes_history", JSON.stringify(updatedHistory));
+    } catch (err: any) {
+      console.error("Notes parsing failed:", err.message);
+      showFlash(err.response?.data?.error || "Failed to parse notes. Please check note format.", "error");
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
   const formatTimer = (totalSeconds: number) => {
     const min = Math.floor(totalSeconds / 60);
     const sec = totalSeconds % 60;
@@ -231,6 +334,13 @@ export default function RecordWorkoutPage() {
 
     if (sessionExercises.length === 0) {
       showFlash("Please add at least one exercise to your session log.", "warning");
+      return;
+    }
+
+    // Block unmatched exercise submission
+    const hasUnmatched = sessionExercises.some((se) => se.exerciseId.startsWith("unmatched-"));
+    if (hasUnmatched) {
+      showFlash("Please match all exercises to database entries before saving.", "warning");
       return;
     }
 
@@ -417,6 +527,59 @@ export default function RecordWorkoutPage() {
               </button>
             </div>
 
+            {/* AI Note Parser Widget */}
+            <section className="bg-surface border border-border-subtle p-5 rounded-md shadow-card flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[9px] font-bold tracking-widest text-accent uppercase font-mono">
+                  ✨ AI Workout Notes Parser
+                </span>
+                <p className="text-[11px] text-text-secondary uppercase tracking-wider font-mono">
+                  Paste unstructured training notes (e.g. "08/05/26 Pull Day. Exercises- Bench Press 80kg 8 8 6") to log instantly.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <textarea
+                  value={rawNotesText}
+                  onChange={(e) => setRawNotesText(e.target.value)}
+                  placeholder="Paste notes here: e.g. 08/05/26 Pull Day. Exercises - Machine Row 40kg 12 10 10"
+                  className="w-full h-24 p-3 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none resize-none font-mono placeholder:text-text-muted transition-colors duration-200"
+                />
+
+                {notesHistory.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[9px] font-bold text-text-muted uppercase tracking-wider font-mono">
+                      Recent Notes History (Click to load shortcut)
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {notesHistory.map((item, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setRawNotesText(item)}
+                          className="text-[10px] font-mono bg-bg/50 border border-border-subtle hover:border-accent/40 text-text-secondary hover:text-accent px-2 py-1 rounded-xs transition-all max-w-[200px] truncate cursor-pointer"
+                          title={item}
+                        >
+                          {item.slice(0, 35)}...
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    onClick={handleParseNotes}
+                    disabled={isParsing}
+                    className="text-xs py-2 px-6 h-[38px] cursor-pointer"
+                  >
+                    {isParsing ? "Parsing Notes..." : "✨ Parse & Populate Session"}
+                  </Button>
+                </div>
+              </div>
+            </section>
+
             <form onSubmit={handleSubmit} className="flex flex-col gap-8">
               {/* Session Metadata Controls */}
               <section className="bg-surface border border-border-subtle p-5 rounded-md shadow-card flex flex-col gap-6">
@@ -511,9 +674,26 @@ export default function RecordWorkoutPage() {
                             <span className="text-[9px] bg-bg border border-accent/20 px-2 py-0.5 text-text-accent font-mono uppercase tracking-wider rounded-xs font-semibold">
                               {se.target_muscle}
                             </span>
-                            <h4 className="text-sm font-bold text-text-primary uppercase tracking-tight">
-                              {se.name}
-                            </h4>
+                            {se.exerciseId.startsWith("unmatched-") ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[9px] bg-danger/10 border border-danger/30 px-2 py-0.5 text-danger font-mono uppercase tracking-wider rounded-xs font-semibold animate-pulse">
+                                  ⚠️ Unmatched
+                                </span>
+                                <div className="w-52">
+                                  <Dropdown
+                                    options={dropdownOptions}
+                                    selectedValue=""
+                                    onChange={(newId) => updateExerciseAssociation(se.exerciseId, newId)}
+                                    label={`Match: "${se.name}"`}
+                                    maxHeight="160px"
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <h4 className="text-sm font-bold text-text-primary uppercase tracking-tight">
+                                {se.name}
+                              </h4>
+                            )}
                           </div>
                           <button
                             type="button"

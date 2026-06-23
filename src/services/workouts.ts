@@ -159,6 +159,43 @@ export async function getWorkoutAiAnalysis(sessionId: string): Promise<WorkoutAi
   return response.data;
 }
 
+export interface SuggestedExercise {
+  id: string;
+  name: string;
+  target_muscle: string;
+}
+
+export interface ParsedSet {
+  set_number: number;
+  weight_kg: number;
+  reps: number;
+  set_type: "normal" | "warmup" | "drop" | "failure";
+}
+
+export interface ParsedExercise {
+  raw_name: string;
+  matched: boolean;
+  exercise_id: string | null;
+  exercise_name: string | null;
+  suggested_exercise: SuggestedExercise | null;
+  inferred_target_muscle: string;
+  sets: ParsedSet[];
+}
+
+export interface ParsedNotesResponse {
+  title: string;
+  date: string;
+  exercises: ParsedExercise[];
+}
+
+export async function parseWorkoutNotes(rawText: string): Promise<ParsedNotesResponse> {
+  const response = await axios.post<ParsedNotesResponse>("/api/workouts/sessions/parse-notes", {
+    raw_text: rawText,
+  });
+  return response.data;
+}
+
+
 
 
 
