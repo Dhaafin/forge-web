@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useChatStream } from "../../../hooks/useChatStream";
 import { Spinner } from "../../atoms/Spinner";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 
 export const CoachChatPanel: React.FC = () => {
   const { messages, isLoading, sendMessage, stopStreaming, clearChat } = useChatStream();
