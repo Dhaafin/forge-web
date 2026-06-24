@@ -1,20 +1,32 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useAuth } from "../../contexts/AuthContext";
+import { Spinner } from "../atoms/Spinner";
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const links = [
     { href: "/dashboard", label: "DASHBOARD" },
     { href: "/dashboard/exercises", label: "EXERCISES" },
     { href: "/dashboard/workouts", label: "WORKOUTS" },
   ];
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } catch (err) {
+      console.error("Logout error:", err);
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <header className="border-b border-border-subtle bg-surface/30 backdrop-blur-md sticky top-0 z-50">
@@ -45,13 +57,15 @@ export const Navbar: React.FC = () => {
           })}
           <button
             type="button"
-            onClick={logout}
-            className="px-4 py-2 border border-border-subtle hover:border-accent hover:text-text-accent transition-all duration-300 rounded-xs cursor-pointer"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="px-4 py-2 border border-border-subtle hover:border-accent hover:text-text-accent transition-all duration-300 rounded-xs cursor-pointer flex items-center justify-center gap-2 min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            DISCONNECT
+            {isLoggingOut ? <Spinner size="sm" /> : "DISCONNECT"}
           </button>
         </nav>
       </div>
     </header>
   );
 };
+

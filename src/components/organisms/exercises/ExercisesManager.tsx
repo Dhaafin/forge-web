@@ -11,6 +11,7 @@ import { Modal } from "../../molecules/Modal";
 import { ExerciseCard } from "../../molecules/exercises/ExerciseCard";
 import { fetchExercises, createExercise, updateExercise, deleteExercise, Exercise } from "../../../services/workouts";
 import { useFlash } from "../../../contexts/FlashContext";
+import Link from "next/link";
 
 const MUSCLE_GROUPS = [
   "Chest",
