@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "../atoms/Input";
 import { Button } from "../atoms/Button";
+import { Spinner } from "../atoms/Spinner";
 import { loginUser } from "../../services/auth";
 import { useFlash } from "../../contexts/FlashContext";
 
@@ -91,7 +92,14 @@ export const LoginForm: React.FC = () => {
       </div>
 
       <Button type="submit" fullWidth disabled={loading}>
-        {loading ? "Decrypting Access..." : "Request Access"}
+        {loading ? (
+          <div className="flex items-center justify-center gap-2">
+            <Spinner size="sm" />
+            <span>Decrypting Access...</span>
+          </div>
+        ) : (
+          "Request Access"
+        )}
       </Button>
     </form>
   );
