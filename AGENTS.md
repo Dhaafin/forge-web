@@ -78,6 +78,9 @@ forge-web/
   - *Props*: None.
 - **WorkoutHistoryList (`src/components/organisms/workouts/WorkoutHistoryList.tsx`)**: Workout archives display organism managing history lists, sort presets, dynamic detail expanders, inline sets editor modals, and AI coach report queries.
   - *Props*: None.
+- **CoachChatPanel (`src/components/organisms/chat/CoachChatPanel.tsx`)**: Premium streaming AI Coach chatbot interface organism.
+  - *Props*: None.
+
 
 
 ## Agent Best Practices
