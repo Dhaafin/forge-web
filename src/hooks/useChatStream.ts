@@ -13,8 +13,12 @@ export function useChatStream() {
   const [isLoading, setIsLoading] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const sendMessage = async (messageText: string) => {
-    if (!messageText.trim()) return;
+  const loadHistory = (chatMessages: ChatMessage[]) => {
+    setMessages(chatMessages);
+  };
+
+  const sendMessage = async (messageText: string, sessionId: string) => {
+    if (!messageText.trim() || !sessionId) return;
 
     setIsLoading(true);
     abortControllerRef.current = new AbortController();
@@ -40,7 +44,7 @@ export function useChatStream() {
     setMessages((prev) => [...prev, userMessage, placeholderAssistant]);
 
     try {
-      const response = await fetch("/api/ai/chat/stream", {
+      const response = await fetch(`/api/ai/chat/sessions/${sessionId}/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: messageText }),
@@ -82,7 +86,6 @@ export function useChatStream() {
       );
     } catch (error: any) {
       if (error.name === "AbortError") {
-        // Cleanly handle user abort
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMessageId
@@ -119,5 +122,5 @@ export function useChatStream() {
     setMessages([]);
   };
 
-  return { messages, isLoading, sendMessage, stopStreaming, clearChat };
+  return { messages, isLoading, sendMessage, stopStreaming, clearChat, loadHistory };
 }
