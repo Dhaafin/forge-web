@@ -3,7 +3,21 @@ import { LoginForm } from "../components/organisms/LoginForm";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen w-full bg-bg">
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-bg md:flex-row md:items-stretch overflow-y-auto py-8 md:py-0">
+      {/* Mobile background image (only visible below md) */}
+      <div className="absolute inset-0 md:hidden z-0 select-none pointer-events-none">
+        <Image
+          src="/login_bg.png"
+          alt="Forge Private Gym Background"
+          fill
+          priority
+          className="object-cover object-center brightness-40"
+        />
+        {/* Dark overlay and subtle blur for readability */}
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" />
+        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-bg/20" />
+      </div>
+
       {/* Left Pane - Atmospheric Visuals (60%) */}
       <div className="relative hidden md:flex w-[60%] flex-col justify-between p-16 overflow-hidden border-r border-border-subtle select-none">
         {/* Background Image */}
@@ -45,15 +59,20 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Right Pane - LoginForm portal (40%) */}
-      <div className="flex flex-1 flex-col items-center justify-center p-8 sm:p-16 bg-bg relative">
+      {/* Right Pane - LoginForm portal (40% on desktop, glass container on mobile) */}
+      <div className="relative z-10 flex w-full max-w-[90%] sm:max-w-md md:max-w-none md:w-[40%] flex-col items-center justify-center p-6 sm:p-10 md:p-16 rounded-xl bg-surface/70 backdrop-blur-md border border-accent/15 shadow-accent md:shadow-none md:bg-bg md:backdrop-blur-none md:border-0 md:rounded-none my-auto">
         {/* Mobile branding */}
-        <div className="absolute top-12 left-8 md:hidden flex items-center gap-3">
-          <span className="text-lg font-bold tracking-[0.3em] text-text-primary">
-            FORGE
-          </span>
-          <span className="px-1.5 py-0.5 border border-accent text-[8px] font-bold tracking-widest text-text-accent rounded-xs">
-            ATHLETIC
+        <div className="mb-8 md:hidden flex flex-col items-center gap-2 select-none">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl font-bold tracking-[0.3em] text-text-primary">
+              FORGE
+            </span>
+            <span className="px-1.5 py-0.5 border border-accent text-[8px] font-bold tracking-widest text-text-accent rounded-xs">
+              ATHLETIC
+            </span>
+          </div>
+          <span className="text-[10px] tracking-[0.2em] text-text-muted uppercase font-semibold">
+            PRIVATE ATHLETIC CLUB
           </span>
         </div>
 
@@ -62,3 +81,4 @@ export default function Home() {
     </div>
   );
 }
+
