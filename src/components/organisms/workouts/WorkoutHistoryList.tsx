@@ -380,14 +380,13 @@ export const WorkoutHistoryList: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Filters block */}
       <motion.section
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
-        className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-surface border border-border-subtle p-5 rounded-md shadow-card"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end bg-surface border border-border-subtle p-5 rounded-md shadow-card"
       >
-        <div className="md:col-span-1">
+        <div className="sm:col-span-2 lg:col-span-1">
           <Input
             id="searchHistory"
             type="text"
@@ -483,7 +482,7 @@ export const WorkoutHistoryList: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6 justify-between md:justify-end border-t md:border-t-0 border-border-subtle/50 pt-3 md:pt-0">
+                    <div className="flex items-center gap-3 sm:gap-6 justify-between md:justify-end border-t md:border-t-0 border-border-subtle/50 pt-3 md:pt-0">
                       <div className="flex items-center gap-4">
                         <div className="text-right">
                           <span className="block text-[8px] uppercase tracking-wider text-text-muted font-mono">
@@ -556,25 +555,27 @@ export const WorkoutHistoryList: React.FC = () => {
                               {session.sets.map((set, idx) => (
                                 <div
                                   key={set.id}
-                                  className="flex items-center justify-between py-2 px-3 border border-border-subtle bg-surface/40 hover:bg-surface/75 rounded-xs transition-colors text-xs"
+                                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:py-2 sm:px-3 gap-2 sm:gap-4 border border-border-subtle bg-surface/40 hover:bg-surface/75 rounded-xs transition-colors text-xs"
                                 >
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-[9px] text-text-muted font-mono">
+                                  <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+                                    <span className="text-[9px] text-text-muted font-mono mt-0.5 sm:mt-0">
                                       {(idx + 1).toString().padStart(2, "0")}
                                     </span>
-                                    <span className="font-semibold text-text-primary uppercase tracking-tight">
-                                      {set.exercise?.name || set.exercise_name || "Exercise Record"}
-                                    </span>
-                                    <span className="text-[9px] bg-surface-raised border border-border-strong px-2 py-0.5 text-text-secondary font-mono uppercase tracking-wider rounded-xs">
-                                      {set.exercise?.target_muscle || set.target_muscle || "General"}
-                                    </span>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 min-w-0 w-full">
+                                      <span className="font-semibold text-text-primary uppercase tracking-tight break-words">
+                                        {set.exercise?.name || set.exercise_name || "Exercise Record"}
+                                      </span>
+                                      <span className="text-[8px] bg-surface-raised border border-border-strong px-2 py-0.5 text-text-secondary font-mono uppercase tracking-wider rounded-xs w-fit">
+                                        {set.exercise?.target_muscle || set.target_muscle || "General"}
+                                      </span>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-4">
-                                    <span className="font-mono text-text-primary">
+                                  <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto border-t border-border-subtle/30 sm:border-0 pt-2 sm:pt-0 mt-1 sm:mt-0">
+                                    <span className="font-mono text-text-primary whitespace-nowrap">
                                       {set.weight_kg} kg × {set.reps} reps
                                     </span>
                                     {set.is_pr && (
-                                      <span className="px-1.5 py-0.5 bg-success/15 border border-success/30 text-[8px] font-bold text-success rounded-xs font-mono uppercase tracking-widest">
+                                      <span className="px-1.5 py-0.5 bg-success/15 border border-success/30 text-[8px] font-bold text-success rounded-xs font-mono uppercase tracking-widest whitespace-nowrap">
                                         🔥 PR
                                       </span>
                                     )}
