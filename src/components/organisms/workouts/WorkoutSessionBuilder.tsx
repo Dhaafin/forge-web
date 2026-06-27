@@ -560,7 +560,7 @@ export const WorkoutSessionBuilder: React.FC = () => {
                     </span>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <DatePicker
                       label="Date"
                       value={pastDate}
@@ -589,7 +589,7 @@ export const WorkoutSessionBuilder: React.FC = () => {
 
             {/* Dynamic Exercise Selector */}
             <section className="bg-surface border border-border-subtle p-5 rounded-md shadow-card flex flex-col gap-4">
-              <div className="flex flex-col md:flex-row gap-4 items-end">
+              <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-end">
                 <div className="flex-1">
                   <Dropdown
                     label="Choose Exercise to Add"
@@ -602,7 +602,7 @@ export const WorkoutSessionBuilder: React.FC = () => {
                 <Button
                   type="button"
                   onClick={addExerciseToSession}
-                  className="py-2.5 px-6 text-xs h-[42px] cursor-pointer"
+                  className="py-2.5 px-6 text-xs h-[42px] cursor-pointer w-full sm:w-auto"
                 >
                   + Add to Workout
                 </Button>
@@ -662,7 +662,7 @@ export const WorkoutSessionBuilder: React.FC = () => {
                       {/* Sets details body */}
                       <div className="p-5 flex flex-col gap-3">
                         {se.sets.length > 0 && (
-                          <div className="grid grid-cols-12 gap-3 items-center mb-1">
+                          <div className="hidden sm:grid grid-cols-12 gap-3 items-center mb-1">
                             <span className="col-span-1 text-[9px] font-bold tracking-widest text-text-muted uppercase font-mono text-center">
                               Set
                             </span>
@@ -690,45 +690,71 @@ export const WorkoutSessionBuilder: React.FC = () => {
                               transition={{ duration: 0.2, ease: "easeInOut" }}
                               className="overflow-hidden"
                             >
-                              <div className="grid grid-cols-12 gap-3 items-center py-1.5">
-                                <span className="col-span-1 text-xs font-semibold font-mono text-text-secondary text-center">
-                                  {(idx + 1).toString().padStart(2, "0")}
-                                </span>
-
-                                <div className="col-span-3">
-                                  <input
-                                    type="number"
-                                    value={set.weight}
-                                    onChange={(e) => updateSetField(se.exerciseId, idx, "weight", Number(e.target.value))}
-                                    placeholder="Weight (kg)"
-                                    className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
-                                    required
-                                    min={0}
-                                  />
+                              <div className="flex flex-col sm:grid sm:grid-cols-12 gap-2.5 sm:gap-3 items-stretch sm:items-center py-2.5 sm:py-1.5 border-b border-border-subtle/30 sm:border-0 pb-3 sm:pb-0">
+                                {/* Mobile Header Row */}
+                                <div className="flex sm:hidden items-center justify-between">
+                                  <span className="text-xs font-bold font-mono text-text-accent">
+                                    SET {(idx + 1).toString().padStart(2, "0")}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeSetFromExercise(se.exerciseId, idx)}
+                                    className="text-[10px] text-text-secondary hover:text-danger font-mono uppercase font-bold cursor-pointer"
+                                  >
+                                    Delete Set
+                                  </button>
                                 </div>
 
-                                <div className="col-span-3">
-                                  <input
-                                    type="number"
-                                    value={set.reps}
-                                    onChange={(e) => updateSetField(se.exerciseId, idx, "reps", Number(e.target.value))}
-                                    placeholder="Reps"
-                                    className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
-                                    required
-                                    min={0}
-                                  />
+                                {/* Inputs Grid */}
+                                <div className="grid grid-cols-3 sm:contents gap-2 items-end">
+                                  {/* Weight Input */}
+                                  <div className="flex flex-col sm:col-span-3 gap-1">
+                                    <span className="block sm:hidden text-[8px] text-text-muted font-mono tracking-widest uppercase">
+                                      Weight (kg)
+                                    </span>
+                                    <input
+                                      type="number"
+                                      value={set.weight}
+                                      onChange={(e) => updateSetField(se.exerciseId, idx, "weight", Number(e.target.value))}
+                                      placeholder="Weight"
+                                      className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
+                                      required
+                                      min={0}
+                                    />
+                                  </div>
+
+                                  {/* Reps Input */}
+                                  <div className="flex flex-col sm:col-span-3 gap-1">
+                                    <span className="block sm:hidden text-[8px] text-text-muted font-mono tracking-widest uppercase">
+                                      Reps
+                                    </span>
+                                    <input
+                                      type="number"
+                                      value={set.reps}
+                                      onChange={(e) => updateSetField(se.exerciseId, idx, "reps", Number(e.target.value))}
+                                      placeholder="Reps"
+                                      className="w-full px-3 py-2 bg-bg border border-border-subtle text-text-primary text-xs rounded-sm focus:border-border-strong outline-none font-mono"
+                                      required
+                                      min={0}
+                                    />
+                                  </div>
+
+                                  {/* Set Type Dropdown */}
+                                  <div className="flex flex-col sm:col-span-4 gap-1">
+                                    <span className="block sm:hidden text-[8px] text-text-muted font-mono tracking-widest uppercase">
+                                      Set Type
+                                    </span>
+                                    <Dropdown
+                                      options={setTypeOptions}
+                                      selectedValue={set.type}
+                                      onChange={(val) => updateSetField(se.exerciseId, idx, "type", val as any)}
+                                      maxHeight="160px"
+                                    />
+                                  </div>
                                 </div>
 
-                                <div className="col-span-4">
-                                  <Dropdown
-                                    options={setTypeOptions}
-                                    selectedValue={set.type}
-                                    onChange={(val) => updateSetField(se.exerciseId, idx, "type", val as any)}
-                                    maxHeight="160px"
-                                  />
-                                </div>
-
-                                <div className="col-span-1 flex justify-center">
+                                {/* Desktop Delete button */}
+                                <div className="hidden sm:flex sm:col-span-1 justify-center">
                                   <button
                                     type="button"
                                     onClick={() => removeSetFromExercise(se.exerciseId, idx)}
