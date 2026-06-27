@@ -123,7 +123,7 @@ export const CoachChatPanel: React.FC = () => {
   const currentSession = sessions.find((s) => s.id === activeSessionId);
 
   return (
-    <div className="flex h-[500px] w-full border border-border-subtle bg-surface/20 rounded-lg overflow-hidden backdrop-blur-md relative">
+    <div className="flex h-full min-h-[350px] sm:h-[500px] w-full border border-border-subtle bg-surface/20 rounded-lg overflow-hidden backdrop-blur-md relative">
       {/* Session Drawer / Sidebar */}
       <AnimatePresence>
         {showSessions && (

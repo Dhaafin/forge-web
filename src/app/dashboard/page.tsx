@@ -88,7 +88,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-10 relative">
+    <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-10 flex flex-col gap-10 relative">
       <AnimatePresence mode="wait">
         {loading ? (
           <motion.div
@@ -106,9 +106,9 @@ export default function DashboardPage() {
                 <Skeleton className="h-9 w-72" />
                 <Skeleton className="h-4 w-96" />
               </div>
-              <div className="flex gap-3">
-                <Skeleton className="h-10 w-36" />
-                <Skeleton className="h-10 w-36" />
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <Skeleton className="h-10 w-full sm:w-36" />
+                <Skeleton className="h-10 w-full sm:w-36" />
               </div>
             </div>
 
@@ -153,14 +153,14 @@ export default function DashboardPage() {
                   Your conditioning session is ready for check-in today. Stay disciplined, forge ahead.
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <Link href="/dashboard/workouts/record?mode=live">
-                  <button className="px-4 py-2.5 bg-accent hover:bg-accent-hover text-bg text-[10px] font-bold tracking-widest uppercase rounded-xs transition-all duration-200 shadow-accent select-none cursor-pointer">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <Link href="/dashboard/workouts/record?mode=live" className="w-full sm:w-auto">
+                  <button className="w-full px-4 py-2.5 bg-accent hover:bg-accent-hover text-bg text-[10px] font-bold tracking-widest uppercase rounded-xs transition-all duration-200 shadow-accent select-none cursor-pointer text-center">
                     ⚡ Start Live Session
                   </button>
                 </Link>
-                <Link href="/dashboard/workouts/record?mode=past">
-                  <button className="px-4 py-2.5 bg-surface border border-border-subtle hover:border-accent-muted text-text-primary text-[10px] font-bold tracking-widest uppercase rounded-xs transition-all duration-200 select-none cursor-pointer">
+                <Link href="/dashboard/workouts/record?mode=past" className="w-full sm:w-auto">
+                  <button className="w-full px-4 py-2.5 bg-surface border border-border-subtle hover:border-accent-muted text-text-primary text-[10px] font-bold tracking-widest uppercase rounded-xs transition-all duration-200 select-none cursor-pointer text-center">
                     Log Past Session
                   </button>
                 </Link>

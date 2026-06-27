@@ -14,6 +14,7 @@ export const Navbar: React.FC = () => {
   const { logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const links = [
     { href: "/dashboard", label: "DASHBOARD" },
@@ -44,7 +45,8 @@ export const Navbar: React.FC = () => {
             </span>
           </div>
 
-          <nav className="flex items-center gap-6 text-[10px] font-bold tracking-widest uppercase">
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-6 text-[10px] font-bold tracking-widest uppercase">
             {links.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -79,8 +81,123 @@ export const Navbar: React.FC = () => {
               {isLoggingOut ? <Spinner size="sm" /> : "DISCONNECT"}
             </button>
           </nav>
+
+          {/* Mobile hamburger menu toggle */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="flex md:hidden items-center justify-center p-2 text-text-primary hover:text-accent transition-colors cursor-pointer"
+            aria-label="Toggle menu"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {isMobileMenuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
         </div>
       </header>
+
+      {/* Mobile Menu Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden"
+            />
+            {/* Drawer container */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween", ease: "easeInOut", duration: 0.3 }}
+              className="fixed inset-y-0 right-0 z-40 w-64 bg-surface-raised border-l border-border-subtle p-6 flex flex-col justify-between md:hidden shadow-2xl"
+            >
+              <div className="flex flex-col gap-8">
+                {/* Header inside drawer */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold tracking-[0.2em] text-text-primary">MENU</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-xs font-mono text-text-secondary hover:text-text-primary uppercase tracking-widest cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                {/* Links stack */}
+                <nav className="flex flex-col gap-6 text-xs font-bold tracking-widest uppercase">
+                  {links.map((link) => {
+                    const isActive = pathname === link.href;
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`transition-colors ${
+                          isActive ? "text-text-accent" : "text-text-secondary hover:text-text-primary"
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Bottom Actions inside drawer */}
+              <div className="flex flex-col gap-4 mt-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsChatOpen(true);
+                  }}
+                  className={`w-full py-3 border text-center transition-all duration-300 rounded-xs cursor-pointer text-xs font-bold tracking-widest uppercase ${
+                    isChatOpen
+                      ? "border-accent text-text-accent bg-accent/5"
+                      : "border-border-subtle hover:border-accent hover:text-text-accent"
+                  }`}
+                >
+                  COACH
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="w-full py-3 border border-border-subtle hover:border-accent hover:text-text-accent transition-all duration-300 rounded-xs cursor-pointer flex items-center justify-center gap-2 text-xs font-bold tracking-widest uppercase disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoggingOut ? <Spinner size="sm" /> : "DISCONNECT"}
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Floating Chat Panel overlay */}
       <AnimatePresence>
@@ -90,7 +207,7 @@ export const Navbar: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="fixed bottom-6 right-6 z-50 w-full max-w-[380px] shadow-2xl rounded-lg overflow-hidden bg-bg/95"
+            className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50 w-full sm:max-w-[380px] h-[100dvh] sm:h-auto shadow-2xl rounded-none sm:rounded-lg overflow-hidden bg-bg/95"
           >
             <div className="absolute top-4 right-4 z-50">
               <button
