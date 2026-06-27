@@ -34,8 +34,8 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-      <header className="border-b border-border-subtle bg-surface/30 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-border-subtle bg-surface/30 backdrop-blur-md sticky top-0 z-50 h-[69px] flex items-center">
+        <div className="max-w-6xl mx-auto w-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/dashboard" className="text-xl font-bold tracking-[0.3em] text-text-primary hover:text-accent transition-colors">
               FORGE
@@ -126,7 +126,7 @@ export const Navbar: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden"
+              className="fixed top-[69px] inset-0 z-30 bg-black/60 backdrop-blur-xs md:hidden"
             />
             {/* Drawer container */}
             <motion.div
@@ -134,20 +134,9 @@ export const Navbar: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "tween", ease: "easeInOut", duration: 0.3 }}
-              className="fixed inset-y-0 right-0 z-40 w-64 bg-surface-raised border-l border-border-subtle p-6 flex flex-col justify-between md:hidden shadow-2xl"
+              className="fixed top-[69px] bottom-0 right-0 z-40 w-64 bg-surface-raised/95 backdrop-blur-md border-l border-border-subtle p-6 flex flex-col justify-between md:hidden shadow-2xl"
             >
               <div className="flex flex-col gap-8">
-                {/* Header inside drawer */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold tracking-[0.2em] text-text-primary">MENU</span>
-                  <button
-                    type="button"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-xs font-mono text-text-secondary hover:text-text-primary uppercase tracking-widest cursor-pointer"
-                  >
-                    Close
-                  </button>
-                </div>
 
                 {/* Links stack */}
                 <nav className="flex flex-col gap-6 text-xs font-bold tracking-widest uppercase">
