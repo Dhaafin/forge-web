@@ -126,7 +126,7 @@ export const Navbar: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed top-[69px] inset-0 z-30 bg-black/60 backdrop-blur-xs md:hidden"
+              className="fixed top-[69px] inset-x-0 bottom-0 z-30 bg-black/60 backdrop-blur-xs md:hidden"
             />
             {/* Drawer container */}
             <motion.div
