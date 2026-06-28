@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import axios from "axios";
 
 const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8000";
 
@@ -9,26 +10,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ detail: "Not authenticated" }, { status: 401 });
     }
 
-    const response = await fetch(`${backendUrl}/api/v1/ai/chat/sessions`, {
-      method: "GET",
+    const response = await axios.get(`${backendUrl}/api/v1/ai/chat/sessions`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (!response.ok) {
-      const errJson = await response.json().catch(() => ({}));
-      return NextResponse.json(
-        { detail: errJson.detail || "Failed to fetch chat sessions" },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (err) {
-    console.error("Fetch sessions proxy error:", err);
-    return NextResponse.json({ detail: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(response.data);
+  } catch (err: any) {
+    console.error("Fetch sessions proxy error:", err.message);
+    const status = err.response?.status || 500;
+    const message = err.response?.data?.detail || "Failed to fetch chat sessions";
+    return NextResponse.json({ detail: message }, { status });
   }
 }
 
@@ -39,26 +32,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ detail: "Not authenticated" }, { status: 401 });
     }
 
-    const response = await fetch(`${backendUrl}/api/v1/ai/chat/sessions`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await axios.post(
+      `${backendUrl}/api/v1/ai/chat/sessions`,
+      "",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    if (!response.ok) {
-      const errJson = await response.json().catch(() => ({}));
-      return NextResponse.json(
-        { detail: errJson.detail || "Failed to create chat session" },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    return NextResponse.json(data, { status: 201 });
-  } catch (err) {
-    console.error("Create session proxy error:", err);
-    return NextResponse.json({ detail: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(response.data, { status: 201 });
+  } catch (err: any) {
+    console.error("Create session proxy error:", err.message);
+    const status = err.response?.status || 500;
+    const message = err.response?.data?.detail || "Failed to create chat session";
+    return NextResponse.json({ detail: message }, { status });
   }
 }
+
